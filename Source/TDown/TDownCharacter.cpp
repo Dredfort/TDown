@@ -137,11 +137,12 @@ void ATDownCharacter::OnCollision(AActor* OtherActor, UPrimitiveComponent* Other
 		ProcessWeaponPickUp(Weapon);
 	}
 
-	ATDownPickUpObject* PickUper = Cast<ATDownPickUpObject>(OtherActor);
+	/*ATDownPickUpObject* PickUper = Cast<ATDownPickUpObject>(OtherActor);
 	if (PickUper)
 	{
 		ProcessActorPickUp(PickUper);
-	}
+	}*/
+	ProcessActorPickUp(OtherActor);
 }
 
 void ATDownCharacter::RefreshHP_Implementation()
@@ -225,6 +226,7 @@ void ATDownCharacter::ProcessActorPickUp(AActor* ActorToPickUp)
 		if (PickUpArmor)
 		{
 			CurrentArmor = PickUpArmor;
+			EquipArmor(CurrentArmor);
 		}
 	}
 }
@@ -252,10 +254,12 @@ void ATDownCharacter::EquipArmor(ATDownArmor * Armor)
 {
 	if (Armor !=NULL)
 	{
+		//CurrentArmor->Destroy();
 		CurrentArmor = Armor;
 
-		//CurrentArmor->SetOwningPawn(this);
-		//CurrentArmor->OnEquip();
+		CurrentArmor->SetOwningPawn(this);
+		CurrentArmor->OnEquip();
+
 		
 	}
 	
@@ -274,6 +278,12 @@ void ATDownCharacter::GiveDefaultAmmunition()
 	}
 
 	ATDownArmor* Armor = GetWorld()->SpawnActor<ATDownArmor>(ArmorSpawn);
+	if (Armor)
+	{
+		CurrentArmor = Armor;
+		CurrentArmor->SetOwningPawn(this);
+		CurrentArmor->OnEquip();
+	}
 
 	
 }

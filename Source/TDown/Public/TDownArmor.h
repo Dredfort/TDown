@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include "TDownCharacter.h"
 #include "GameFramework/Actor.h"
 #include "TDownArmor.generated.h"
 
@@ -14,11 +13,13 @@ struct FArmorConfig
 	GENERATED_USTRUCT_BODY();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmorSettings")
+		UStaticMesh* ArmorMesh;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmorSettings")
 		int32 ArmorClass;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmorSettings")
 		FString Name;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmorSettings")
-	FName ArmorSocket = FName(TEXT("Armor"));
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmorSettings")
+	FName ArmorSocket = FName(TEXT("Armor"));*/
 };
 
 UCLASS()
@@ -30,10 +31,14 @@ public:
 	// Sets default values for this actor's properties
 	ATDownArmor(const FObjectInitializer& ObjectInitializer);
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "ArmorSettings")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+		USphereComponent* CollisionComp;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "-ArmorSettings")
 		UStaticMeshComponent* ArmorMesh;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "ArmorSettings")
+	FName ArmorSocket = FName(TEXT("Armor"));
+
+	UPROPERTY(EditAnywhere, Category = "-ArmorSettings")
 		FArmorConfig ArmorConfig;
 
 
@@ -42,4 +47,6 @@ public:
 	void SetOwningPawn(ATDownCharacter*);
 	
 	ATDownCharacter* OwnerChar;
+
+	void PostInitializeComponents() override;
 };

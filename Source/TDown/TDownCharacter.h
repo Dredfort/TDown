@@ -60,6 +60,7 @@ public:
 	void NextWeapon();
 	void PrevWeapon();
 	void EquipWeapon(ATDownWeapon*);
+
 	void GiveDefaultAmmunition();
 
 	void ProcessActorPickUp(AActor* ActorToPickUp);
