@@ -18,7 +18,7 @@ ATDownCharacter::ATDownCharacter()
 
 	HP = 100;
 
-	
+	PrimaryActorTick.bCanEverTick = true;
 
 	// Set size for player capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
@@ -150,7 +150,7 @@ void ATDownCharacter::RefreshHP_Implementation()
 
 
 
-void ATDownCharacter::ProcessWeaponPickUp(ATDownWeapon *Weapon)
+void ATDownCharacter::ProcessWeaponPickUp(AActor* Weapon)
 {
 	if (Weapon != NULL)
 	{
@@ -164,6 +164,8 @@ void ATDownCharacter::ProcessWeaponPickUp(ATDownWeapon *Weapon)
 			Weapon->Destroy();
 			
 	}
+
+	
 
 	/*	if (Inventory[Weapon->WeaponConfig.Priority]==NULL)
 		{
@@ -199,25 +201,30 @@ void ATDownCharacter::ProcessActorPickUp(AActor* ActorToPickUp)
 {
 	if (ActorToPickUp !=NULL)
 	{
-		ATDownPickUpObject* PickUpper = Cast<ATDownPickUpObject>(ActorToPickUp);
-		if (PickUpper)
+		ATDownPickUpObject* PickUpAmmo = Cast<ATDownPickUpObject>(ActorToPickUp);
+		if (PickUpAmmo)
 		{
-			auto InvenroryWeapon = Cast<ATDownWeapon>(Inventory[PickUpper->PickupConfig.Priority]);
-
-			auto AmmoToAdd = PickUpper->PickupConfig.AmmoQuality;
+			auto InvenroryWeapon = Cast<ATDownWeapon>(Inventory[PickUpAmmo->PickupConfig.Priority]);
+			auto AmmoToAdd = PickUpAmmo->PickupConfig.AmmoQuality;
 
 			if (InvenroryWeapon)
 			{
-				if (Inventory[PickUpper->PickupConfig.Priority] != NULL)
+				if (Inventory[PickUpAmmo->PickupConfig.Priority] != NULL)
 				{
 					InvenroryWeapon->CurrentAmmo += AmmoToAdd;
 					GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Green, "ammo for " + InvenroryWeapon->WeaponConfig.Name + " added " + FString::FromInt(AmmoToAdd));
 					//GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Green, AmmoToAdd);
 
 
-					PickUpper->Destroy();
+					PickUpAmmo->Destroy();
 				}
 			}
+		}
+
+		ATDownArmor* PickUpArmor = Cast<ATDownArmor>(ActorToPickUp);
+		if (PickUpArmor)
+		{
+			CurrentArmor = PickUpArmor;
 		}
 	}
 }
@@ -241,7 +248,20 @@ void ATDownCharacter::EquipWeapon(ATDownWeapon *Weapon)
 	}
 }
 
-void ATDownCharacter::GiveDefaultWeapon()
+void ATDownCharacter::EquipArmor(ATDownArmor * Armor)
+{
+	if (Armor !=NULL)
+	{
+		CurrentArmor = Armor;
+
+		//CurrentArmor->SetOwningPawn(this);
+		//CurrentArmor->OnEquip();
+		
+	}
+	
+}
+
+void ATDownCharacter::GiveDefaultAmmunition()
 {
 	ATDownWeapon* Weapon = GetWorld()->SpawnActor<ATDownWeapon>(WeaponSpawn);
 	if (Weapon)
@@ -252,6 +272,8 @@ void ATDownCharacter::GiveDefaultWeapon()
 		CurrentWeapon->OnEqup();
 		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, "Added " + Weapon->CurrentAmmo + Weapon->WeaponConfig.Name);
 	}
+
+	ATDownArmor* Armor = GetWorld()->SpawnActor<ATDownArmor>(ArmorSpawn);
 
 	
 }
@@ -285,7 +307,7 @@ void ATDownCharacter::Tick(float DeltaSeconds)
 void ATDownCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	GiveDefaultWeapon();
+	GiveDefaultAmmunition();
 }
 
 
@@ -294,17 +316,28 @@ void ATDownCharacter::FireState(bool setState)
 	bFire = setState;
 }
 
+int ATDownCharacter::CalcReduceDamageFromArmor(int32 InDamage)
+{
+	auto ReducedDamage = CurrentArmor->ArmorConfig.ArmorClass;
+
+	return ReducedDamage;
+}
+
+
 void ATDownCharacter::SetAliveState(bool AliveState)
 {
 	bIsAlive = AliveState;
 }
 
-void ATDownCharacter::SetDamage(int32 newHP)
+void ATDownCharacter::SetDamage(int32 outDamage)
 {
-	HP -= newHP;
+	auto Damage = CalcReduceDamageFromArmor(outDamage);
+
+	HP -= Damage;
 	RefreshHP();
 	if (HP<=0)
 	{
 		SetAliveState(false);
+		HP = 0;
 	}
 }

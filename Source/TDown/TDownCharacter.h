@@ -2,6 +2,7 @@
 #pragma once
 
 #include "GameFramework/Character.h"
+#include "TDownArmor.h"
 #include "TDownCharacter.generated.h"
 
 
@@ -14,9 +15,20 @@ class ATDownCharacter : public ACharacter
 public:
 	ATDownCharacter();
 	
-
+											/*Weapon*/
 	UPROPERTY(EditDefaultsOnly, Category = "-DefaultInventory")
 		TSubclassOf<class ATDownWeapon> WeaponSpawn;	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "-Weapon")
+		ATDownWeapon* CurrentWeapon;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "-Weapon")
+	 bool bFire;
+
+											/*Armor*/
+	UPROPERTY(EditDefaultsOnly, Category = "-DefaultInventory")
+		TSubclassOf<class ATDownArmor> ArmorSpawn;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "-Armor")
+		ATDownArmor* CurrentArmor;
+
 
 	UPROPERTY(EditDefaultsOnly, Category = "-DefaultInventory")
 		TArray<class ATDownWeapon*> Inventory;
@@ -31,25 +43,24 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "-CharacterSettings")
 	bool bIsAlive;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "-Weapon")
-		ATDownWeapon* CurrentWeapon;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "-Weapon")
-	 bool bFire;
 
 	UFUNCTION()
 	void FireWeapon(FVector Target);
 	void SetDamage(int32);
 	void FireState(bool);
 
+	int CalcReduceDamageFromArmor(int32 InDamage);// reduce damage from armor
+	void EquipArmor(ATDownArmor* Armor);
+
 	void SetAliveState(bool);
 
 
-	void ProcessWeaponPickUp(ATDownWeapon*);
+	void ProcessWeaponPickUp(AActor*);
 	void NextWeapon();
 	void PrevWeapon();
 	void EquipWeapon(ATDownWeapon*);
-	void GiveDefaultWeapon();
+	void GiveDefaultAmmunition();
 
 	void ProcessActorPickUp(AActor* ActorToPickUp);
 
