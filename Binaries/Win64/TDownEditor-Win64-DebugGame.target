@@ -1,0 +1,33 @@
+{
+	"TargetName" : "TDownEditor",
+	"Platform" : "Win64",
+	"Configuration" : "DebugGame",
+	"BuildId" : "04b43b37-dd1a-4d8d-b8ce-1613fe3c3d3d",
+	"Version" : 
+	{
+		"MajorVersion" : 4,
+		"MinorVersion" : 11,
+		"PatchVersion" : 0,
+		"Changelist" : 2875303,
+		"IsLicenseeVersion" : 0,
+		"BranchName" : "++UE4+Release-4.11"
+	},
+	"BuildProducts" :
+	[
+		{
+			"Path" : "$(ProjectDir)\\Binaries\\Win64\\UE4Editor-TDown-Win64-DebugGame.dll",
+			"Type" : "DynamicLibrary"
+		},
+		{
+			"Path" : "$(ProjectDir)\\Binaries\\Win64\\UE4Editor-TDown-Win64-DebugGame.pdb",
+			"Type" : "SymbolFile"
+		},
+		{
+			"Path" : "$(ProjectDir)\\Intermediate\\Build\\Win64\\UE4Editor\\DebugGame\\UE4Editor-TDown-Win64-DebugGame.lib",
+			"Type" : "ImportLibrary"
+		}
+	],
+	"RuntimeDependencies" :
+	[
+	]
+}

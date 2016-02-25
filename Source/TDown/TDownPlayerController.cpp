@@ -47,7 +47,7 @@ void ATDownPlayerController::OnActionPressed()
 	if (GetChar)
 	{
 		FHitResult Hit;
-		GetHitResultUnderCursor(ECC_Visibility, false, Hit);
+		GetHitResultUnderCursor(ECC_WorldDynamic, false, Hit);
 			GetChar->FireWeapon(Hit.ImpactPoint);
 	
 	}

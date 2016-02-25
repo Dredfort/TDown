@@ -173,20 +173,7 @@ void ATDownWeapon::ProjectileFire()
 			GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Red, TEXT("ProjectileFire"));
 		}
 		UGameplayStatics::FinishSpawningActor(SpawnProj, SpawnTM);
-
-		/*FActorSpawnParameters SParams;
-		SParams.Owner			= this;
-		SParams.Instigator = Instigator;
-
-
-		ATDownBullet* SpawnProj = GetWorld()->SpawnActor<ATDownBullet>(ProjectileClass, StartPoint, RotProj, SParams);
-		if (SpawnProj)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Red, TEXT("ProjectileFire"));
-			SpawnProj->SetOwner(GetOwner());
-			SpawnProj->SetHitParticle(WeaponConfig.HitPatricle);
-			SpawnProj->CollisionComp->IgnoreActorWhenMoving(OwnerPawn,true);
-		}*/
+			
 	}
 
 }

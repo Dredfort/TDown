@@ -326,28 +326,34 @@ void ATDownCharacter::FireState(bool setState)
 	bFire = setState;
 }
 
-int ATDownCharacter::CalcReduceDamageFromArmor(int32 InDamage)
-{
-	auto ReducedDamage = CurrentArmor->ArmorConfig.ArmorClass;
-
-	return ReducedDamage;
-}
-
-
 void ATDownCharacter::SetAliveState(bool AliveState)
 {
 	bIsAlive = AliveState;
 }
 
-void ATDownCharacter::SetDamage(int32 outDamage)
+float ATDownCharacter::CalcReduceDamageFromArmor(float InDamage)
 {
-	auto Damage = CalcReduceDamageFromArmor(outDamage);
+	auto ArmorDefence = (InDamage / 100)*(CurrentArmor->ArmorConfig.ArmorClass * 10);
+	auto ReducedDamage = InDamage - ArmorDefence;
+	return ReducedDamage;
+}
 
-	HP -= Damage;
-	RefreshHP();
-	if (HP<=0)
+
+
+void ATDownCharacter::SetDamage(float outDamage)
+{
+	auto Damage = 0;
+	Damage = CalcReduceDamageFromArmor(outDamage);
+
+	if (Damage>=0)
 	{
-		SetAliveState(false);
-		HP = 0;
+		HP -= Damage;
+		RefreshHP();
+		if (HP <= 0)
+		{
+			SetAliveState(false);
+			HP = 0;
+		}
 	}
+
 }

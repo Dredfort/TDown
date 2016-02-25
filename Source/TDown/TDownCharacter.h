@@ -36,7 +36,7 @@ public:
 	int32 InventoryNum = 3;
 	
 	UPROPERTY(VisibleAnywhere,BlueprintReadWrite, Category = "-CharacterSettings")
-	int32 HP;
+	float HP;
 	UFUNCTION(BlueprintNativeEvent, Category ="-TDCharacter")
 		void RefreshHP();
 	
@@ -47,10 +47,10 @@ public:
 
 	UFUNCTION()
 	void FireWeapon(FVector Target);
-	void SetDamage(int32);
+	void SetDamage(float);
 	void FireState(bool);
 
-	int CalcReduceDamageFromArmor(int32 InDamage);// reduce damage from armor
+	float CalcReduceDamageFromArmor(float InDamage);// reduce damage from armor
 	void EquipArmor(ATDownArmor* Armor);
 
 	void SetAliveState(bool);
