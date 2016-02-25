@@ -69,10 +69,8 @@ void ATDownWeapon::Fire()
 		}
 		if (ProjectileType==EWeaponProjectile::EP_Spread)
 		{
-
 			GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Black, TEXT("Spread"));
 			InstantFire();
-
 
 			if (ShotNumber < WeaponConfig.ShotCost)
 			{
@@ -84,18 +82,20 @@ void ATDownWeapon::Fire()
 			{
 				ShotNumber = 0;
 				OwnerPawn->FireState(false);
-			}
-			
+			}			
 		}
 		if (ProjectileType == EWeaponProjectile::EP_Projectile)
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Black, TEXT("Projectile"));
 			ProjectileFire();
 		}
-
 		MuzzleFlash->ActivateSystem();
 	}
-	else ReloadAmmo();
+	else
+	{
+		ReloadAmmo();
+		OwnerPawn->FireState(false);
+	}
 
 }
 
@@ -179,7 +179,7 @@ void ATDownWeapon::ProjectileFire()
 }
 void ATDownWeapon::InstantFire()
 {
-	CurrentClip -= WeaponConfig.ShotCost;
+	CurrentClip -= 1;// WeaponConfig.ShotCost;
 
 	GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Red, TEXT("InstantFire"));
 

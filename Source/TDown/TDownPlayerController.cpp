@@ -47,7 +47,7 @@ void ATDownPlayerController::OnActionPressed()
 	if (GetChar)
 	{
 		FHitResult Hit;
-		GetHitResultUnderCursor(ECC_WorldDynamic, false, Hit);
+		GetHitResultUnderCursor(ECC_GameTraceChannel1, false, Hit);
 			GetChar->FireWeapon(Hit.ImpactPoint);
 	
 	}
@@ -107,6 +107,8 @@ void ATDownPlayerController::SetNewMoveDestination(const FVector DestLocation)
 	{
 		UNavigationSystem* const NavSys = GetWorld()->GetNavigationSystem();
 		float const Distance = FVector::Dist(DestLocation, Pawn->GetActorLocation());
+
+		//NavSys->RegisterNavigationInvoker(Pawn);												/*		testing			  */		
 
 		// We need to issue move command only if far enough in order for walk animation to play correctly
 		if (NavSys && (Distance > 120.0f))

@@ -343,7 +343,7 @@ float ATDownCharacter::CalcReduceDamageFromArmor(float InDamage)
 void ATDownCharacter::SetDamage(float outDamage)
 {
 	auto Damage = 0;
-	Damage = CalcReduceDamageFromArmor(outDamage);
+	Damage = CalcReduceDamageFromArmor(static_cast <int32>(outDamage));
 
 	if (Damage>=0)
 	{

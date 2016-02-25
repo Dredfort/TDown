@@ -36,7 +36,7 @@ public:
 	int32 InventoryNum = 3;
 	
 	UPROPERTY(VisibleAnywhere,BlueprintReadWrite, Category = "-CharacterSettings")
-	float HP;
+	int32 HP;
 	UFUNCTION(BlueprintNativeEvent, Category ="-TDCharacter")
 		void RefreshHP();
 	
