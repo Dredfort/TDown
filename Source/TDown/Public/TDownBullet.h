@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Engine.h"
+#include "TDownProjectileMovementComponent.h"
 #include "GameFramework/Actor.h"
 #include "TDownBullet.generated.h"
 
@@ -23,7 +24,7 @@ public:
 		USphereComponent* CollisionComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "-Projectile")
-		UProjectileMovementComponent* ProjectileMovement;
+		UTDownProjectileMovementComponent* ProjectileMovement;
 
 	UPROPERTY(VisibleDefaultsOnly, Category = "-Projectile")
 		UParticleSystemComponent* PSystem;

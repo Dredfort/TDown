@@ -5,6 +5,7 @@
 #include "Engine.h"
 #include "TDownCharacter.h"
 #include "TDownWeapon.h"
+#include "TDownProjectileMovementComponent.h"
 
 // Sets default values
 ATDownBullet::ATDownBullet(const FObjectInitializer& ObjectInitializer)
@@ -27,7 +28,7 @@ ATDownBullet::ATDownBullet(const FObjectInitializer& ObjectInitializer)
 	BulletMesh->AttachParent = CollisionComp;;
 
 
-	ProjectileMovement = ObjectInitializer.CreateDefaultSubobject<UProjectileMovementComponent>(this, TEXT("ProjectileMovement"));
+	ProjectileMovement = ObjectInitializer.CreateDefaultSubobject<UTDownProjectileMovementComponent>(this, TEXT("ProjectileMovement"));
 	ProjectileMovement->UpdatedComponent = CollisionComp;
 	ProjectileMovement->InitialSpeed = 3000;
 	ProjectileMovement->MaxSpeed = 3500;

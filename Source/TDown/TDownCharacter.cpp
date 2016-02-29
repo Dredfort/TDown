@@ -329,6 +329,11 @@ void ATDownCharacter::FireState(bool setState)
 void ATDownCharacter::SetAliveState(bool AliveState)
 {
 	bIsAlive = AliveState;
+	if (bIsAlive == false)
+	{
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+
 }
 
 float ATDownCharacter::CalcReduceDamageFromArmor(float InDamage)
