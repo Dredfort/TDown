@@ -40,3 +40,31 @@ void ATDownGameMode::ChangeMenuWidget(TSubclassOf<UUserWidget> NewWidgetClass)
 		}
 	}
 }
+
+void ATDownGameMode::SetCurrentState(EGamePlayerState NewState)
+{
+	CurrentState = NewState;
+	HandleNewState(NewState);
+}
+
+void ATDownGameMode::HandleNewState(EGamePlayerState NewState)
+{
+
+	switch (NewState)
+	{
+
+	case EGamePlayerState::GS_Player:
+	{
+
+	}
+
+	case EGamePlayerState::GS_Bot:
+	{
+
+	}
+	case EGamePlayerState::GS_Unknown:
+	default:
+		break;
+	}
+
+}

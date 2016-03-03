@@ -332,6 +332,8 @@ void ATDownCharacter::SetAliveState(bool AliveState)
 	if (bIsAlive == false)
 	{
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+		GetMesh()->bNoSkeletonUpdate = true;
 	}
 
 }

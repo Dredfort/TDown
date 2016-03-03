@@ -100,11 +100,12 @@ public:
 protected:
 	AstarListIt*				head;
 	AstarListIt*				tail;
-	std::vector<AstarListIt*>	heap;
+	//std::vector<AstarListIt*>	heap;
+	TArray<class AstarListIt*>	heap;
 	int							iSize;
 	int							iHeap;
 };
-
+/*_________________________________________________________________________________________________________________________________*/
 class AstarHash
 {
 public:

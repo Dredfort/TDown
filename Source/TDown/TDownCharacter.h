@@ -45,8 +45,9 @@ public:
 
 
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable, Category = "-TDCharacter")
 	void FireWeapon(FVector Target);
+
 	void SetDamage(float);
 	void FireState(bool);
 

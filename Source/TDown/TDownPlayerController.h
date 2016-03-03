@@ -3,6 +3,8 @@
 #include "GameFramework/PlayerController.h"
 #include "TDownPlayerController.generated.h"
 
+class ATDownGameMode;// forward declaration of game mode.
+
 UCLASS()
 class ATDownPlayerController : public APlayerController
 {
@@ -15,9 +17,14 @@ protected:
 	/** True if the controlled character should navigate to the mouse cursor. */
 	uint32 bMoveToMouseCursor : 1;
 
+	//is needed for rulling movement from gamemode
+	bool bIsCanMoove;
+
 	// Begin PlayerController interface
 	virtual void PlayerTick(float DeltaTime) override;
 	virtual void SetupInputComponent() override;
+
+	virtual void BeginPlay() override;
 	// End PlayerController interface
 
 	/** Navigate player to the current mouse cursor location. */
@@ -36,6 +43,9 @@ protected:
 	void OnActionPressed();
 	void NextWeapon();
 	void PrevWeapon();
+
+	ATDownGameMode* CurrentGameMode;
+
 };
 
 

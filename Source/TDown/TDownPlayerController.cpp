@@ -4,19 +4,63 @@
 #include "TDownPlayerController.h"
 #include "TDownCharacter.h"
 #include "AI/Navigation/NavigationSystem.h"
+#include "TDownGameMode.h"
 
 ATDownPlayerController::ATDownPlayerController()
 {
 	bShowMouseCursor = true;
 	DefaultMouseCursor = EMouseCursor::Crosshairs;
+
+	bIsCanMoove = false;
+
 }
 
 void ATDownPlayerController::PlayerTick(float DeltaTime)
 {
 	Super::PlayerTick(DeltaTime);
 
+	//enum EState =  CurrentGameMode->GetCurrentState();
+
+	switch (CurrentGameMode->GetCurrentState())
+	{
+	case EGamePlayerState::GS_Player:
+	{
+		bIsCanMoove = true;
+		break;
+	}
+	case EGamePlayerState::GS_Bot:
+	{
+		bIsCanMoove = false;
+		break;
+	}
+	case EGamePlayerState::GS_Unknown:
+	{
+		break;
+	}
+	default:
+		bIsCanMoove = true;
+		break;
+	}
+
+	/*if (CurrentGameMode->GetCurrentState() == EGamePlayerState::GS_Player)
+	{
+		bIsCanMoove = true;
+	}
+	else
+	{
+		if (CurrentGameMode->GetCurrentState() == EGamePlayerState::GS_Bot)
+		{
+			bIsCanMoove = false;
+		}
+		else
+		{
+			bIsCanMoove = true;
+		}
+	}*/
+
+
 	// keep updating the destination every tick while desired
-	if (bMoveToMouseCursor)
+	if (bMoveToMouseCursor && bIsCanMoove)
 	{
 		MoveToMouseCursor();
 	}
@@ -39,6 +83,13 @@ void ATDownPlayerController::SetupInputComponent()
 	// support touch devices 
 	InputComponent->BindTouch(EInputEvent::IE_Pressed, this, &ATDownPlayerController::MoveToTouchLocation);
 	InputComponent->BindTouch(EInputEvent::IE_Repeat, this, &ATDownPlayerController::MoveToTouchLocation);
+}
+
+void ATDownPlayerController::BeginPlay()
+{
+	Super::BeginPlay();
+
+	CurrentGameMode = Cast<ATDownGameMode>(UGameplayStatics::GetGameMode(this));
 }
 
 void ATDownPlayerController::OnActionPressed()
@@ -107,6 +158,7 @@ void ATDownPlayerController::SetNewMoveDestination(const FVector DestLocation)
 	{
 		UNavigationSystem* const NavSys = GetWorld()->GetNavigationSystem();
 		float const Distance = FVector::Dist(DestLocation, Pawn->GetActorLocation());
+
 
 		//NavSys->RegisterNavigationInvoker(Pawn);												/*		testing			  */		
 

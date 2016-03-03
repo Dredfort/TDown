@@ -28,7 +28,7 @@ ATDownBullet::ATDownBullet(const FObjectInitializer& ObjectInitializer)
 	BulletMesh->AttachParent = CollisionComp;;
 
 
-	ProjectileMovement = ObjectInitializer.CreateDefaultSubobject<UTDownProjectileMovementComponent>(this, TEXT("ProjectileMovement"));
+	ProjectileMovement = ObjectInitializer.CreateDefaultSubobject<UProjectileMovementComponent>(this, TEXT("ProjectileMovement"));
 	ProjectileMovement->UpdatedComponent = CollisionComp;
 	ProjectileMovement->InitialSpeed = 3000;
 	ProjectileMovement->MaxSpeed = 3500;
