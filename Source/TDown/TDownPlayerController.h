@@ -17,8 +17,11 @@ protected:
 	/** True if the controlled character should navigate to the mouse cursor. */
 	uint32 bMoveToMouseCursor : 1;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "-CharacterSettings")
 	//is needed for rulling movement from gamemode
 	bool bIsCanMoove;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "-CharacterSettings")
+		FVector TargetLocation;
 
 	// Begin PlayerController interface
 	virtual void PlayerTick(float DeltaTime) override;

@@ -108,6 +108,7 @@ public:
 
 																/** MECHANICS **/
 	void SetOwningPawn(ATDownCharacter*);
+	
 
 	void OnEqup();
 	void OnUnEquip();

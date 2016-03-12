@@ -108,6 +108,8 @@ void ATDownWeapon::SetOwningPawn(ATDownCharacter * NewOwner)
 	}
 }
 
+
+
 void ATDownWeapon::OnEqup()
 {
 	CollisionComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -161,15 +163,30 @@ void ATDownWeapon::ProjectileFire()
 		FTransform SpawnTM;
 		SpawnTM.SetRotation(RotProj.Quaternion());
 		SpawnTM.SetLocation(StartPoint);
+		/*_________________________________________________________________________________________________________________________*/
+		TArray<AActor*>IgnorActors;
+		IgnorActors.Add(OwnerPawn);
+		IgnorActors.Add(this);
+		FVector EndPoint = Direction*WeaponConfig.WeaponRange;
+		FHitResult Impact = WeaponTrace(GetWorld(), ECC_WorldDynamic, StartPoint, EndPoint, false, FColor::Blue, IgnorActors);
+		//DrawDebugLine(World, StartPoint, Impact.ImpactPoint, FColor::Red, false, 5, 10, 3);
+		/*_________________________________________________________________________________________________________________________*/
 
 		ATDownBullet* SpawnProj = Cast<ATDownBullet>(UGameplayStatics::BeginDeferredActorSpawnFromClass(this, ProjectileClass, SpawnTM));
 
 		if (SpawnProj)
 		{
 			SpawnProj->SetOwner(GetOwner());
+			SpawnProj->SetCharOwner(OwnerPawn);	
+
+			SpawnProj->SetTargetPoint(Impact.ImpactPoint);
+			SpawnProj->SeTargetActor(Impact.GetActor());
+			SpawnProj->ActorsToIgnore = IgnorActors;
+			
 			SpawnProj->SetHitParticle(WeaponConfig.HitPatricle);
 			SpawnProj->CollisionComp->IgnoreActorWhenMoving(OwnerPawn, true);
 			SpawnProj->CurrentDamage = WeaponConfig.WeaponDamage;
+
 			GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Red, TEXT("ProjectileFire"));
 		}
 		UGameplayStatics::FinishSpawningActor(SpawnProj, SpawnTM);

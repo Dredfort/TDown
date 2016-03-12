@@ -300,6 +300,8 @@ void ATDownCharacter::PostInitializeComponents()
 
 void ATDownCharacter::Tick(float DeltaSeconds)
 {
+	Super::Tick(DeltaSeconds);
+
 	if (CursorToWorld != nullptr)
 	{
 		if (APlayerController* PC = Cast<APlayerController>(GetController()))
@@ -333,7 +335,7 @@ void ATDownCharacter::SetAliveState(bool AliveState)
 	{
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-		GetMesh()->bNoSkeletonUpdate = true;
+		//GetMesh()->bNoSkeletonUpdate = true;
 	}
 
 }

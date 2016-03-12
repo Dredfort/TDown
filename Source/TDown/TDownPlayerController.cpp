@@ -5,6 +5,7 @@
 #include "TDownCharacter.h"
 #include "AI/Navigation/NavigationSystem.h"
 #include "TDownGameMode.h"
+#include "Engine.h"
 
 ATDownPlayerController::ATDownPlayerController()
 {
@@ -12,34 +13,40 @@ ATDownPlayerController::ATDownPlayerController()
 	DefaultMouseCursor = EMouseCursor::Crosshairs;
 
 	bIsCanMoove = false;
-
+	
 }
 
 void ATDownPlayerController::PlayerTick(float DeltaTime)
 {
 	Super::PlayerTick(DeltaTime);
 
-	//enum EState =  CurrentGameMode->GetCurrentState();
-
-	switch (CurrentGameMode->GetCurrentState())
+	if (CurrentGameMode)
 	{
-	case EGamePlayerState::GS_Player:
-	{
-		bIsCanMoove = true;
-		break;
+		// get state from game mode and stops player movement
+		switch (CurrentGameMode->GetCurrentState())
+		{
+		case EGamePlayerState::GS_Player:
+		{
+			bIsCanMoove = true;
+			break;
+		}
+		case EGamePlayerState::GS_Bot:
+		{
+			bIsCanMoove = false;
+			break;
+		}
+		case EGamePlayerState::GS_Unknown:
+		{
+			break;
+		}
+		default:
+			bIsCanMoove = true;
+			break;
+		}
 	}
-	case EGamePlayerState::GS_Bot:
+	else
 	{
-		bIsCanMoove = false;
-		break;
-	}
-	case EGamePlayerState::GS_Unknown:
-	{
-		break;
-	}
-	default:
-		bIsCanMoove = true;
-		break;
+		//GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Red, TEXT("____________ CurrentGameMode FAIL!!!!____________"),true,);
 	}
 
 	/*if (CurrentGameMode->GetCurrentState() == EGamePlayerState::GS_Player)
@@ -148,6 +155,7 @@ void ATDownPlayerController::MoveToTouchLocation(const ETouchIndex::Type FingerI
 	{
 		// We hit something, move there
 		SetNewMoveDestination(HitResult.ImpactPoint);
+
 	}
 }
 
@@ -166,6 +174,8 @@ void ATDownPlayerController::SetNewMoveDestination(const FVector DestLocation)
 		if (NavSys && (Distance > 120.0f))
 		{
 			NavSys->SimpleMoveToLocation(this, DestLocation);
+			TargetLocation = DestLocation;
+
 		}
 	}
 }

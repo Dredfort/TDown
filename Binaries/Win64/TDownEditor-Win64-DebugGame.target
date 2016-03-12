@@ -2,13 +2,13 @@
 	"TargetName" : "TDownEditor",
 	"Platform" : "Win64",
 	"Configuration" : "DebugGame",
-	"BuildId" : "b31d316f-4d25-48a6-a2c5-f3bc82b91c3f",
+	"BuildId" : "2859c17c-692e-411b-aa81-fbd24e4dceaf",
 	"Version" : 
 	{
 		"MajorVersion" : 4,
 		"MinorVersion" : 11,
 		"PatchVersion" : 0,
-		"Changelist" : 2875303,
+		"Changelist" : 2896623,
 		"IsLicenseeVersion" : 0,
 		"BranchName" : "++UE4+Release-4.11"
 	},

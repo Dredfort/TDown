@@ -14,11 +14,17 @@ ATDownBullet::ATDownBullet(const FObjectInitializer& ObjectInitializer)
 	PrimaryActorTick.bCanEverTick = true;
 
 	CurrentDamage = 30;
+	//WeaponTarget = NULL;	
 
 	CollisionComp = ObjectInitializer.CreateDefaultSubobject<USphereComponent>(this, TEXT("Collision"));
 	CollisionComp->InitSphereRadius(5);
 	RootComponent = CollisionComp;
 	CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &ATDownBullet::OnCollision);
+
+	SeekSphere = ObjectInitializer.CreateDefaultSubobject<USphereComponent>(this, TEXT("SeekSphere"));
+	SeekSphere->AttachTo(CollisionComp);
+	SeekSphere->InitSphereRadius(100);
+	SeekSphere->OnComponentBeginOverlap.AddDynamic(this, &ATDownBullet::SeekCollision);
  
 
 	PSystem = ObjectInitializer.CreateDefaultSubobject<UParticleSystemComponent>(this, TEXT("PS"));
@@ -28,18 +34,36 @@ ATDownBullet::ATDownBullet(const FObjectInitializer& ObjectInitializer)
 	BulletMesh->AttachParent = CollisionComp;;
 
 
-	ProjectileMovement = ObjectInitializer.CreateDefaultSubobject<UProjectileMovementComponent>(this, TEXT("ProjectileMovement"));
+	ProjectileMovement = ObjectInitializer.CreateDefaultSubobject<UTDownProjectileMovementComponent>(this, TEXT("ProjectileMovement"));
 	ProjectileMovement->UpdatedComponent = CollisionComp;
-	ProjectileMovement->InitialSpeed = 3000;
-	ProjectileMovement->MaxSpeed = 3500;
-	ProjectileMovement->bRotationFollowsVelocity = false;
-	ProjectileMovement->bShouldBounce = false;
+	ProjectileMovement->InitialSpeed = 500;
+	ProjectileMovement->MaxSpeed = 1000;
+	ProjectileMovement->bRotationFollowsVelocity = true;
+	ProjectileMovement->Velocity = FVector::ZeroVector;
+	ProjectileMovement->ProjectileGravityScale = 0;
+
 	
 	
 
 	//ProjectileMovement->Velocity = FVector::ZeroVector;
 	/** How long this Actor lives before dying**/
-	InitialLifeSpan = 5;
+	InitialLifeSpan = 20;
+}
+
+void ATDownBullet::BeginPlay()
+{
+	Super::BeginPlay();
+
+	ATDownCharacter* TCharacter = Cast<ATDownCharacter>(TargetActor);
+	if (TCharacter)
+	{
+		ProjectileMovement->SetTarget(TCharacter);
+	}
+	else
+	{
+		FVector Direction = GetActorLocation() - pTargetPoint;
+		ProjectileMovement->SetTargetDirection(pTargetPoint, Direction);
+	}
 }
 
 void ATDownBullet::OnCollision(AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
@@ -47,17 +71,16 @@ void ATDownBullet::OnCollision(AActor * OtherActor, UPrimitiveComponent * OtherC
 	
 	ATDownCharacter* Enemy = Cast<ATDownCharacter>(OtherActor);
 
-	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), HitParticle, SweepResult.Location);
 
 	if ((OtherActor != NULL) && (OtherActor !=this) && (OtherComp != NULL) )
 	{
+	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), HitParticle, SweepResult.Location);
 		if (Enemy)
 		{
 			if (Enemy!=GetOwner())
 			{
 				GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Red, TEXT("HIT!!!"));
 				OtherComp->AddImpulseAtLocation(GetVelocity() * 100, GetActorLocation());
-				//Enemy->SetAliveState(false);
 				Enemy->SetDamage(CurrentDamage);
 				Destroy();
 			}
@@ -68,6 +91,23 @@ void ATDownBullet::OnCollision(AActor * OtherActor, UPrimitiveComponent * OtherC
 		}
 	}	
 }
+
+void ATDownBullet::SeekCollision(AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
+{
+
+	auto CTarget = Cast<ATDownCharacter>(OtherActor);	
+	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL))
+	{
+		
+	}
+}
+
+
+void ATDownBullet::SetCharOwner(ATDownCharacter * NewOwner)
+{
+	CharOwner = NewOwner;
+}
+
 
 
 
