@@ -22,9 +22,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "JavelinMode")
 		float JavelinAttackRadius = 200;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rocket")
-		float RocketMobility = 0.8f;
+		float RocketMobility = 2;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rocket")
-		float RocketAcceleration = 1000;
+		float RocketAcceleration = 10000;
 
 	
 	void SetTarget(ATDownCharacter*);

@@ -34,18 +34,18 @@ ATDownBullet::ATDownBullet(const FObjectInitializer& ObjectInitializer)
 	BulletMesh->AttachParent = CollisionComp;;
 
 
-	ProjectileMovement = ObjectInitializer.CreateDefaultSubobject<UTDownProjectileMovementComponent>(this, TEXT("ProjectileMovement"));
+	ProjectileMovement = ObjectInitializer.CreateDefaultSubobject<UTDownProjectileMovementComponent>(this, TEXT("ProjectileCustomMovement"));
 	ProjectileMovement->UpdatedComponent = CollisionComp;
 	ProjectileMovement->InitialSpeed = 500;
 	ProjectileMovement->MaxSpeed = 1000;
-	ProjectileMovement->bRotationFollowsVelocity = true;
-	ProjectileMovement->Velocity = FVector::ZeroVector;
+	ProjectileMovement->bRotationFollowsVelocity =false ;
+	//ProjectileMovement->Velocity = FVector::ZeroVector;
 	ProjectileMovement->ProjectileGravityScale = 0;
 
 	
 	
 
-	//ProjectileMovement->Velocity = FVector::ZeroVector;
+	
 	/** How long this Actor lives before dying**/
 	InitialLifeSpan = 20;
 }

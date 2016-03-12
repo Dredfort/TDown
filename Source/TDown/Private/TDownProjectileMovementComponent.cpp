@@ -41,7 +41,7 @@ void UTDownProjectileMovementComponent::FollowTarget(FVector & NewVelocity, floa
 	if (bEnableJavelinMode)
 	{
 		FVector RocketLocation = GetOwner()->GetActorLocation();
-		float len = (TargetPosition - RocketLocation).Size2D();
+		auto len = (TargetPosition - RocketLocation).Size2D();
 		if (len > JavelinAttackRadius)
 		{
 			TargetPosition.Z += JavelinAttackHeight;
@@ -52,11 +52,18 @@ void UTDownProjectileMovementComponent::FollowTarget(FVector & NewVelocity, floa
 
 void UTDownProjectileMovementComponent::FollowDirection(FVector & NewVelocity, float DeltaTime) const
 {
-	FVector TargetPosition;
-	FVector RocketLocation = GetOwner()->GetActorLocation();
+	FVector TargetPosition=TargetPoint;		
 
-	TargetPosition = RocketLocation + NewVelocity.GetSafeNormal();
-	
+	if (bEnableJavelinMode)
+	{
+		FVector RocketLocation = GetOwner()->GetActorLocation();
+		auto len = (TargetPosition - RocketLocation).Size2D();
+		if (len > JavelinAttackRadius)
+		{
+			TargetPosition.Z += JavelinAttackHeight;
+		}
+		
+	}
 
 	FollowPoint(NewVelocity, DeltaTime, TargetPosition);
 }
