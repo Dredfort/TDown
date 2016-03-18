@@ -43,7 +43,7 @@ ATDownBullet::ATDownBullet(const FObjectInitializer& ObjectInitializer)
 	ProjectileMovement->ProjectileGravityScale = 0;
 
 	
-	
+	//TraectoryCurve = ObjectInitializer.CreateDefaultSubobject<UCurveVector>(this, TEXT("Curve"));
 
 	
 	/** How long this Actor lives before dying**/
@@ -63,6 +63,10 @@ void ATDownBullet::BeginPlay()
 	{
 		FVector Direction = GetActorLocation() - pTargetPoint;
 		ProjectileMovement->SetTargetDirection(pTargetPoint, Direction);
+	}
+	if (TraectoryCurve !=NULL)
+	{
+		ProjectileMovement->SetTraectoryCurve(TraectoryCurve);
 	}
 }
 

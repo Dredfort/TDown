@@ -26,15 +26,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rocket")
 		float RocketAcceleration = 10000;
 
-	
-	void SetTarget(ATDownCharacter*);
-	
-	void SetTargetDirection(FVector InTargetPoint, FVector inTargetDirection);
-	
+	UCurveVector* cTraectory;
+	void SetTraectoryCurve(UCurveVector* VectorCurve);
 
+	
+	void SetTarget(ATDownCharacter*);	
+	void SetTargetDirection(FVector InTargetPoint, FVector inTargetDirection);
 
 	FVector ComputeVelocity(FVector InitialVelocity, float DeltaTime) const override;
-
 	void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction) override; 
 
 private:

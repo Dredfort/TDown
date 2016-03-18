@@ -4,6 +4,11 @@
 #include "TDownProjectileMovementComponent.h"
 #include "TDownCharacter.h"
 
+void UTDownProjectileMovementComponent::SetTraectoryCurve(UCurveVector * VectorCurve)
+{
+	cTraectory = VectorCurve;
+}
+
 void UTDownProjectileMovementComponent::SetTarget(ATDownCharacter * NewTarget)
 {
 	pTarget = NewTarget;
@@ -52,17 +57,28 @@ void UTDownProjectileMovementComponent::FollowTarget(FVector & NewVelocity, floa
 
 void UTDownProjectileMovementComponent::FollowDirection(FVector & NewVelocity, float DeltaTime) const
 {
-	FVector TargetPosition=TargetPoint;		
-
+	FVector TargetPosition=TargetPoint;
+	//const FVector StartPoint = GetOwner()->GetActorLocation();
+	FVector RocketLocation = GetOwner()->GetActorLocation();
 	if (bEnableJavelinMode)
 	{
-		FVector RocketLocation = GetOwner()->GetActorLocation();
+		
 		auto len = (TargetPosition - RocketLocation).Size2D();
 		if (len > JavelinAttackRadius)
 		{
 			TargetPosition.Z += JavelinAttackHeight;
 		}
-		
+
+		/*if (cTraectory!=NULL)
+		{
+			float currentTime;
+			currentTime =(TargetPosition - RocketLocation).Size2D();
+			float l = FMath::Clamp(currentTime, 0.0f, 1.0f);
+
+			auto zCurvature = (cTraectory->GetVectorValue(currentTime)).Z;
+
+			TargetPosition.Z = (TargetPosition.Z)*zCurvature;
+		}*/
 	}
 
 	FollowPoint(NewVelocity, DeltaTime, TargetPosition);

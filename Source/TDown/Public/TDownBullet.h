@@ -46,7 +46,9 @@ public:
 
 	void SetHitParticle(UParticleSystem* P) { HitParticle = P; };
 
-
+	UPROPERTY(EditAnywhere, Category = "-Projectile")
+	UCurveVector* TraectoryCurve;
+	//UCurveVector GetCurveVector() { return TraectoryCurve; };
 
 	FVector pTargetPoint;
 	AActor* TargetActor;
