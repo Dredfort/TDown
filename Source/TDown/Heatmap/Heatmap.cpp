@@ -10,122 +10,197 @@
 
 
 // Sets default values
-AHeatmap::AHeatmap(const FObjectInitializer& ObjectInitializer) 
+AHeatmap::AHeatmap(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer)
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	PathSpline = ObjectInitializer.CreateDefaultSubobject<USplineComponent>(this, TEXT("Path"));
-	//PathSpline->bSplineHasBeenEdited = true;
-	//PathSpline->SetVisibility(true);
-	//PathSpline->AttachTo(RootComponent);
+	FString StringOfCoords = "";
+	it = 0;
+
+	Billboard = ObjectInitializer.CreateDefaultSubobject<UBillboardComponent>(this, TEXT("Billboard"));
+	RootComponent = Billboard;
+
+	PathSpline = ObjectInitializer.CreateDefaultSubobject<USplineComponent>(this, TEXT("PathSplineComponent"));
 }
 
 // Called when the game starts or when spawned
 void AHeatmap::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	cWorld = GetWorld();
 	if (cWorld)
 	{
 		CheckCharacters();
-		PathSpline->ClearSplinePoints();
+		GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Green, "Characters on map is: " + FString::FromInt(CharactersArr.Num()));
 
+		BuildSplinePath();
 	}
-	GEngine->AddOnScreenDebugMessage(-1,5,FColor::Green,"Characters on map is: "+ FString::FromInt(CharactersArr.Num()));	
 }
 
 // Called every frame
-void AHeatmap::Tick( float DeltaTime )
+void AHeatmap::Tick(float DeltaTime)
 {
-	Super::Tick( DeltaTime );	
+	Super::Tick(DeltaTime);
 }
 
 void AHeatmap::CheckCharacters()
 {
 	if (cWorld)
 	{
-		for (TActorIterator<ATDownCharacter> ActorItr(cWorld); ActorItr; ++ActorItr)
+		for (TActorIterator<ACharacter> ActorItr(cWorld); ActorItr; ++ActorItr)
 		{
 			ATDownCharacter* foundedCh = Cast<ATDownCharacter>(*ActorItr);
-			auto isChr = foundedCh->GetClass()->IsChildOf(ATDownCharacter::StaticClass());
-			if (isChr)
+			auto isChr = foundedCh->GetClass()->IsChildOf(ATDownCharacter::StaticClass());			
+			
+			if (foundedCh)
 			{
-				CharactersArr.Add(foundedCh);				
+				CharactersArr.Add(foundedCh);
 			}
-		}		
-	}
-	auto Char = Cast<ATDownCharacter>(CharactersArr[0]);
-	if (Char)
-	{		
-		CharPtr = Char;
-		auto  CharLoc = (Char->GetActorLocation()).ToString();
-		VerifyOrCreateDirectory(SaveDirectoryPath, LogFileName, CharLoc);
-		GetWorldTimerManager().SetTimer(ChekTimeHandler, this, &AHeatmap::CheckCharacters, TimeBetweenChek, true);
-
-		PathSpline->AddSplineLocalPoint(Char->GetActorLocation());
-	}
-	
-}
-
-bool AHeatmap::VerifyOrCreateDirectory(const FString& SaveDir, const FString& FileName, const FString& StringToSave) const
-{
-	if (!FPlatformFileManager::Get().GetPlatformFile().DirectoryExists(*SaveDir))				// Dir exist?
-	{
-		FPlatformFileManager::Get().GetPlatformFile().CreateDirectory(*SaveDir);				// create if it not exist
-		if (!FPlatformFileManager::Get().GetPlatformFile().DirectoryExists(*SaveDir))			//still could not make directory?
-		{
-			return false;																		//Could not make the specified directory
 		}
 	}
-	
-	auto FileToSave = SaveDir + "/" + FileName;
-
-	if (!FPlatformFileManager::Get().GetPlatformFile().FileExists(*FileToSave))
+	auto selectChar = Cast<ATDownCharacter>(CharactersArr[CharPtrNumber]);
+	if (selectChar)
 	{
-		
-		return false;
+		CharPtr = selectChar;																								// Set pointer to Character 
 	}
-	/*________________________________________________*/
+	if (CharPtr)
+	{
+		auto  CharLoc = (CharPtr->GetActorLocation()).ToString();
+		VerifyOrCreateDirectory(SaveDirectoryPath, LogFileName, CharLoc);
 
-	//FFileHelper::SaveArrayToFile( const TArray<uint8>& Array, const TCHAR* Filename, IFileManager* FileManager /*= &IFileManager::Get()*/, uint32 WriteFlags )
-	TArray<int32> Array;
-	auto FileTo = SaveDir + "/" + "ArrayLocationLogs.txt";
-	
-	FVector CALoc = CharPtr->GetActorLocation();
-	
+		GetWorldTimerManager().SetTimer(ChekTimeHandler, this, &AHeatmap::CheckCharacters, TimeBetweenChek, true);			// check characters recursively
+	}
 
-	Array.Add(CALoc.X);
-	Array.Add(CALoc.Y);
-	Array.Add(CALoc.Z);	
-
-	SaveArrayToFile(Array, *FileTo);
-
-	/*________________________________________________*/
-	static FString StringOfCoords;
-	const TCHAR* StrPtr = *StringToSave;	
-	StringOfCoords.Append(StrPtr);
-	StringOfCoords.Append("\n");	
-	return	FFileHelper::SaveStringToFile(*StringOfCoords, *FileToSave, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
 }
 
+bool AHeatmap::VerifyOrCreateDirectory( FString& SaveDir,  FString& FileName, FString& StringToSave)
+{
+	//if (!FPlatformFileManager::Get().GetPlatformFile().DirectoryExists(*SaveDir))											// Dir exist?
+	//{
+	//	FPlatformFileManager::Get().GetPlatformFile().CreateDirectory(*SaveDir);											// create if it not exist
+	//	if (!FPlatformFileManager::Get().GetPlatformFile().DirectoryExists(*SaveDir))										//still could not make directory?
+	//	{
+	//		return false;																									//Could not make the specified directory
+	//	}
+	//	auto FileToSave = SaveDir + "/" + FileName;
+	//	if (!FPlatformFileManager::Get().GetPlatformFile().FileExists(*FileToSave))	return false;
+	//}
+
+	if (bCollectData)
+	{
+		FVector CALoc = CharPtr->GetActorLocation();
+
+		if (SplineDataSwitcher == ESplineDataSwitcher::ES_ArrayData)
+		{
+			auto FileToSaveArr = SaveDir + "/" + "ArrayLocationLogs.txt";
+			
+
+			static TArray<int16> ArrayToFile;
+
+			ArrayToFile.Add(CALoc.X);
+			ArrayToFile.Add(CALoc.Y);
+			ArrayToFile.Add(CALoc.Z);
 
 
-bool AHeatmap::SaveArrayToFile(const TArray<int32>& Array, const TCHAR * Filename, IFileManager * FileManager, uint32 WriteFlags) const
+			SaveArrayToFile(ArrayToFile, *FileToSaveArr);
+			return true;
+		}
+		if (SplineDataSwitcher == ESplineDataSwitcher::ES_StringData)
+		{
+			//static int64 it;
+			//static FString StringOfCoords;
+			auto FileToSaveArr = SaveDir + "/" + "StringLocationLogs.txt";
+			
+			const FString& loc = CALoc.ToString();
+			const TCHAR* StrPtr = *loc;// *StringToSave;
+
+			StringOfCoords.Append(" line");
+			StringOfCoords.Append(FString::FromInt(it));
+			StringOfCoords.Append(" ");
+			StringOfCoords.Append(StrPtr);
+			StringOfCoords.Append("\n");
+			it++;
+
+
+			FFileHelper::SaveStringToFile(*StringOfCoords, *FileToSaveArr);//FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM
+			return true;
+		}
+	}
+	return false;
+}
+
+void AHeatmap::BuildSplinePath()
+{
+	if (bBuildSpline)
+	{
+		PathSpline->ClearSplinePoints();
+
+		if (SplineDataSwitcher == ESplineDataSwitcher::ES_ArrayData)
+		{
+			//TArray<int16> ArrayFromFile;
+			auto FileFrom = SaveDirectoryPath + "/" + "ArrayLocationLogs.txt";
+
+			LoadFileToArray(ArrayFromFile, *FileFrom, 0);
+
+			FVector SplinePoint;
+			SplinePoint.X = 0;
+			SplinePoint.Y = 0;
+			SplinePoint.Z = 0;
+			for (size_t i = 0; i < ArrayFromFile.Num(); i++)
+			{
+				SplinePoint.X = (ArrayFromFile[i] < 12800 && ArrayFromFile[i] > -12800 ? ArrayFromFile[i] : GetActorLocation().X);
+				i++;
+				SplinePoint.Y = (ArrayFromFile[i] < 12800 && ArrayFromFile[i] > -12800 ? ArrayFromFile[i] : GetActorLocation().Y);
+				i++;
+				SplinePoint.Z = (ArrayFromFile[i] < 12800 && ArrayFromFile[i] > -5000 ? ArrayFromFile[i] : GetActorLocation().Z);
+
+				PathSpline->AddSplineWorldPoint(SplinePoint);
+			}
+		}
+		if (SplineDataSwitcher == ESplineDataSwitcher::ES_StringData)
+		{
+			auto FileFrom = SaveDirectoryPath + "/" + "StringLocationLogs.txt";
+			FString StringFromFile;
+
+			FFileHelper::LoadFileToString(StringFromFile, *FileFrom);
+
+			FVector ResultVector;
+			ResultVector.X = 0;
+			ResultVector.Y = 0;
+			ResultVector.Z = 0;
+
+			FString Ptr;
+
+			for (size_t itr = 0; itr < StringFromFile.Len(); itr++)
+			{
+				Ptr = TEXT("line" + FString::FromInt(itr));
+				const TCHAR* MatchFind = FCString::Strfind(*StringFromFile, *Ptr);
+
+				FParse::Value(MatchFind, TEXT("X="), ResultVector.X);
+				FParse::Value(MatchFind, TEXT("Y="), ResultVector.Y);
+				FParse::Value(MatchFind, TEXT("Z="), ResultVector.Z);
+
+				PathSpline->AddSplineWorldPoint(ResultVector);
+			}
+		}
+	}
+}
+
+bool AHeatmap::SaveArrayToFile(const TArray<int16>& Array, const TCHAR * Filename, IFileManager * FileManager, uint32 WriteFlags) const
 {
 	FArchive* Ar = FileManager->CreateFileWriter(Filename, WriteFlags);
 	if (!Ar)
 	{
 		return 0;
 	}
-	Ar->Serialize(const_cast<int32*>(Array.GetData()), Array.Num());
+	Ar->Serialize(const_cast<int16*>(Array.GetData()), Array.Num());
 	delete Ar;
-	return true;	
+	return true;
 }
 
-bool AHeatmap::LoadFileToArray(TArray<int32>& Result, const TCHAR * Filename, uint32 Flags)
+bool AHeatmap::LoadFileToArray(TArray<int16>& Result, const TCHAR * Filename, uint32 Flags)
 {
 	FArchive* Reader = IFileManager::Get().CreateFileReader(Filename, Flags);
 	if (!Reader)
@@ -136,7 +211,7 @@ bool AHeatmap::LoadFileToArray(TArray<int32>& Result, const TCHAR * Filename, ui
 		}
 		return 0;
 	}
-	int64 TotalSize = Reader->TotalSize();
+	int64 TotalSize = Reader->TotalSize();//int64
 	Result.Reset(TotalSize);
 	Result.AddUninitialized(TotalSize);
 	Reader->Serialize(Result.GetData(), Result.Num());
@@ -144,5 +219,6 @@ bool AHeatmap::LoadFileToArray(TArray<int32>& Result, const TCHAR * Filename, ui
 	delete Reader;
 	return Success;
 }
+
 
 
