@@ -30,8 +30,10 @@ public:
 	/*_________________________________________________*/
 	UPROPERTY(VisibleDefaultsOnly, Category = "_HeatMap")
 		ESplineDataSwitcher SplineDataSwitcher;
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatMap")
 	UBillboardComponent* Billboard;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatMap")
+		UParticleSystem * BeamParticle;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatMap")
 	class USplineComponent* PathSpline;
@@ -43,6 +45,7 @@ public:
 		bool bCollectData = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatMap")
 		bool bRewritetData = false;
+	// character that be used for collect data
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatMap")
 		uint8 CharPtrNumber = 0;
 	UFUNCTION(BlueprintCallable, Category = "_HeatMap")
@@ -51,21 +54,25 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "_HeatMap")
 		void BuildSplinePath();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatMap")
-	FString SaveDirectoryPath = "E:/UE4_Projects/TDown/T";
+	FString SaveDirectoryPath = "E:/UE4_Projects/TDown/HeatmapLogFolder";
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatMap")
 	FString LogFileName = "LocationLogs";
 
-	FString StringOfCoords;
 	int64 it;
-	bool MakeStringFromCoordinates( FString& SaveDir,  FString& FileName);
+	void MakeStringFromCoordinates();
 
 	bool SaveArrayToFile(const TArray<int16>& Array, const TCHAR* Filename, IFileManager * FileManager = &IFileManager::Get(), uint32 WriteFlags = 0) const;
 	bool LoadFileToArray(TArray<int16>& Result, const TCHAR* Filename, uint32 Flags);
 	TArray<int16> ArrayFromFile;
-
 	
+	//void OnConstruction(const FTransform& Transform) override;
+	void PostEditChangeProperty(FPropertyChangedEvent & PropertyChangedEvent)override;
 
+	TArray<UParticleSystemComponent*> ParticlesArr;
+	void SetCharacter(ATDownCharacter* newCharacter);
 private:
+	FString StringOfCoords;
+	TArray<FVector> SplineCoordArr;
 	TArray<ATDownCharacter*> CharactersArr;
 	UWorld* cWorld;
 	FTimerHandle ChekTimeHandler;
