@@ -28,7 +28,7 @@ public:
 	virtual void Tick( float DeltaSeconds ) override;
 
 	/*_________________________________________________*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatMap")
+	UPROPERTY(VisibleDefaultsOnly, Category = "_HeatMap")
 		ESplineDataSwitcher SplineDataSwitcher;
 
 	UBillboardComponent* Billboard;
@@ -53,11 +53,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatMap")
 	FString SaveDirectoryPath = "E:/UE4_Projects/TDown/T";
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatMap")
-	FString LogFileName = "LocationLogs.txt";
+	FString LogFileName = "LocationLogs";
 
 	FString StringOfCoords;
 	int64 it;
-	bool VerifyOrCreateDirectory( FString& SaveDir,  FString& FileName,  FString& StringToSave) ;
+	bool MakeStringFromCoordinates( FString& SaveDir,  FString& FileName);
 
 	bool SaveArrayToFile(const TArray<int16>& Array, const TCHAR* Filename, IFileManager * FileManager = &IFileManager::Get(), uint32 WriteFlags = 0) const;
 	bool LoadFileToArray(TArray<int16>& Result, const TCHAR* Filename, uint32 Flags);

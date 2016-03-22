@@ -66,16 +66,14 @@ void AHeatmap::CheckCharacters()
 		CharPtr = selectChar;																								// Set pointer to Character 
 	}
 	if (CharPtr)
-	{
-		auto  CharLoc = (CharPtr->GetActorLocation()).ToString();
-		VerifyOrCreateDirectory(SaveDirectoryPath, LogFileName, CharLoc);
-
+	{		
+		MakeStringFromCoordinates(SaveDirectoryPath, LogFileName);
 		GetWorldTimerManager().SetTimer(ChekTimeHandler, this, &AHeatmap::CheckCharacters, TimeBetweenChek, true);			// check characters recursively
 	}
 
 }
 
-bool AHeatmap::VerifyOrCreateDirectory( FString& SaveDir,  FString& FileName, FString& StringToSave)
+bool AHeatmap::MakeStringFromCoordinates(FString& SaveDir, FString& FileName)
 {
 	//if (!FPlatformFileManager::Get().GetPlatformFile().DirectoryExists(*SaveDir))											// Dir exist?
 	//{
@@ -92,26 +90,21 @@ bool AHeatmap::VerifyOrCreateDirectory( FString& SaveDir,  FString& FileName, FS
 	{
 		FVector CALoc = CharPtr->GetActorLocation();
 
-		if (SplineDataSwitcher == ESplineDataSwitcher::ES_ArrayData)
+		/*if (SplineDataSwitcher == ESplineDataSwitcher::ES_ArrayData)
 		{
 			auto FileToSaveArr = SaveDir + "/" + "ArrayLocationLogs.txt";
-			
-
 			static TArray<int16> ArrayToFile;
-
 			ArrayToFile.Add(CALoc.X);
 			ArrayToFile.Add(CALoc.Y);
 			ArrayToFile.Add(CALoc.Z);
-
-
 			SaveArrayToFile(ArrayToFile, *FileToSaveArr);
 			return true;
-		}
+		}*/
 		if (SplineDataSwitcher == ESplineDataSwitcher::ES_StringData)
 		{
 			//static int64 it;
 			//static FString StringOfCoords;
-			auto FileToSaveArr = SaveDir + "/" + "StringLocationLogs.txt";
+			auto FileToSaveArr = SaveDir + "/" + LogFileName + "_" + FString::FromInt(CharPtrNumber) + ".txt";
 			
 			const FString& loc = CALoc.ToString();
 			const TCHAR* StrPtr = *loc;// *StringToSave;
@@ -137,31 +130,28 @@ void AHeatmap::BuildSplinePath()
 	{
 		PathSpline->ClearSplinePoints();
 
-		if (SplineDataSwitcher == ESplineDataSwitcher::ES_ArrayData)
-		{
-			//TArray<int16> ArrayFromFile;
-			auto FileFrom = SaveDirectoryPath + "/" + "ArrayLocationLogs.txt";
-
-			LoadFileToArray(ArrayFromFile, *FileFrom, 0);
-
-			FVector SplinePoint;
-			SplinePoint.X = 0;
-			SplinePoint.Y = 0;
-			SplinePoint.Z = 0;
-			for (size_t i = 0; i < ArrayFromFile.Num(); i++)
-			{
-				SplinePoint.X = (ArrayFromFile[i] < 12800 && ArrayFromFile[i] > -12800 ? ArrayFromFile[i] : GetActorLocation().X);
-				i++;
-				SplinePoint.Y = (ArrayFromFile[i] < 12800 && ArrayFromFile[i] > -12800 ? ArrayFromFile[i] : GetActorLocation().Y);
-				i++;
-				SplinePoint.Z = (ArrayFromFile[i] < 12800 && ArrayFromFile[i] > -5000 ? ArrayFromFile[i] : GetActorLocation().Z);
-
-				PathSpline->AddSplineWorldPoint(SplinePoint);
-			}
-		}
+		//if (SplineDataSwitcher == ESplineDataSwitcher::ES_ArrayData)
+		//{
+		//	//TArray<int16> ArrayFromFile;
+		//	auto FileFrom = SaveDirectoryPath + "/" + "ArrayLocationLogs.txt";
+		//	LoadFileToArray(ArrayFromFile, *FileFrom, 0);
+		//	FVector SplinePoint;
+		//	SplinePoint.X = 0;
+		//	SplinePoint.Y = 0;
+		//	SplinePoint.Z = 0;
+		//	for (size_t i = 0; i < ArrayFromFile.Num(); i++)
+		//	{
+		//		SplinePoint.X = (ArrayFromFile[i] < 12800 && ArrayFromFile[i] > -12800 ? ArrayFromFile[i] : GetActorLocation().X);
+		//		i++;
+		//		SplinePoint.Y = (ArrayFromFile[i] < 12800 && ArrayFromFile[i] > -12800 ? ArrayFromFile[i] : GetActorLocation().Y);
+		//		i++;
+		//		SplinePoint.Z = (ArrayFromFile[i] < 12800 && ArrayFromFile[i] > -5000 ? ArrayFromFile[i] : GetActorLocation().Z);
+		//		PathSpline->AddSplineWorldPoint(SplinePoint);
+		//	}
+		//}
 		if (SplineDataSwitcher == ESplineDataSwitcher::ES_StringData)
 		{
-			auto FileFrom = SaveDirectoryPath + "/" + "StringLocationLogs.txt";
+			auto FileFrom = SaveDirectoryPath + "/" + LogFileName + "_" + FString::FromInt(CharPtrNumber) + ".txt";
 			FString StringFromFile;
 
 			FFileHelper::LoadFileToString(StringFromFile, *FileFrom);
