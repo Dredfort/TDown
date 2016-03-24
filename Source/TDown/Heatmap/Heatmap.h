@@ -10,8 +10,8 @@ class ATDownCharacter;
 UENUM(BlueprintType)
 enum class ESplineDataSwitcher : uint8
 {
-	ES_ArrayData UMETA(DisplayName ="ArrayData"),
 	ES_StringData		UMETA(DisplayName = "StringData"),
+	ES_ArrayData		UMETA(DisplayName ="ArrayData")
 };
 
 UCLASS()
@@ -28,12 +28,15 @@ public:
 	virtual void Tick( float DeltaSeconds ) override;
 
 	/*_________________________________________________*/
-	UPROPERTY(VisibleDefaultsOnly, Category = "_HeatMap")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatMap")
 		ESplineDataSwitcher SplineDataSwitcher;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatMap")
 	UBillboardComponent* Billboard;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatMap")
 		UParticleSystem * BeamParticle;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatMap")
+		UTextRenderComponent* TextComponent;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatMap")
 	class USplineComponent* PathSpline;
@@ -44,22 +47,25 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatMap")
 		bool bCollectData = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatMap")
-		bool bRewritetData = false;
+		bool bCollectCharacters = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatMap")
+		FLinearColor TeamColor;
 	// character that be used for collect data
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatMap")
-		uint8 CharPtrNumber = 0;
+		uint8 CharNumberInWorld = 0;
+	ATDownCharacter* CharCurrentPtr;
 	UFUNCTION(BlueprintCallable, Category = "_HeatMap")
-		void CheckCharacters();
+		void CollectCharacters();
 
 	UFUNCTION(BlueprintCallable, Category = "_HeatMap")
-		void BuildSplinePath();
+		bool BuildSplinePath( uint8 CharNumberIn = 0 );
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatMap")
 	FString SaveDirectoryPath = "E:/UE4_Projects/TDown/HeatmapLogFolder";
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatMap")
 	FString LogFileName = "LocationLogs";
 
 	int64 it;
-	void MakeStringFromCoordinates();
+	void CollectData();
 
 	bool SaveArrayToFile(const TArray<int16>& Array, const TCHAR* Filename, IFileManager * FileManager = &IFileManager::Get(), uint32 WriteFlags = 0) const;
 	bool LoadFileToArray(TArray<int16>& Result, const TCHAR* Filename, uint32 Flags);
@@ -67,6 +73,7 @@ public:
 	
 	//void OnConstruction(const FTransform& Transform) override;
 	void PostEditChangeProperty(FPropertyChangedEvent & PropertyChangedEvent)override;
+	void BeginDestroy() override;
 
 	TArray<UParticleSystemComponent*> ParticlesArr;
 	void SetCharacter(ATDownCharacter* newCharacter);
@@ -76,5 +83,4 @@ private:
 	TArray<ATDownCharacter*> CharactersArr;
 	UWorld* cWorld;
 	FTimerHandle ChekTimeHandler;
-	ATDownCharacter* CharPtr;
 };

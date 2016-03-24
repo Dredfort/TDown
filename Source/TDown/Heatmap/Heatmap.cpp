@@ -20,6 +20,16 @@ AHeatmap::AHeatmap(const FObjectInitializer& ObjectInitializer)
 
 	Billboard = ObjectInitializer.CreateDefaultSubobject<UBillboardComponent>(this, TEXT("Billboard"));
 	RootComponent = Billboard;
+	static ConstructorHelpers::FObjectFinder<UTexture2D> Spalsh(TEXT("Texture2D'/Engine/EditorResources/S_NavP.S_NavP'"));
+	if (Spalsh.Succeeded())
+	{
+		Billboard->SetSprite(Spalsh.Object);
+	}
+
+	TextComponent = ObjectInitializer.CreateDefaultSubobject<UTextRenderComponent>(this, TEXT("TextComponent"));
+	TextComponent->AttachTo(RootComponent);
+	TextComponent->WorldSize = 92;
+	TextComponent->bHiddenInGame = false;
 
 	PathSpline = ObjectInitializer.CreateDefaultSubobject<USplineComponent>(this, TEXT("PathSplineComponent"));
 
@@ -35,12 +45,15 @@ void AHeatmap::BeginPlay()
 	cWorld = GetWorld();
 	if (cWorld)
 	{
-		CheckCharacters();
-		GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Green, "Characters on map is: " + FString::FromInt(CharactersArr.Num()));		
-	}
-	if (CharPtr)
-	{			
-		GetWorldTimerManager().SetTimer(ChekTimeHandler, this, &AHeatmap::MakeStringFromCoordinates, TimeBetweenChek, true);
+		if (bCollectCharacters)
+		{
+			CollectCharacters();
+			GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Green, "Characters on map is: " + FString::FromInt(CharactersArr.Num()));		
+			if (CharCurrentPtr)
+			{
+				GetWorldTimerManager().SetTimer(ChekTimeHandler, this, &AHeatmap::CollectData, TimeBetweenChek, true);
+			}
+		}
 	}
 }
 
@@ -50,7 +63,7 @@ void AHeatmap::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void AHeatmap::CheckCharacters()
+void AHeatmap::CollectCharacters()
 {
 	if (cWorld)
 	{
@@ -65,18 +78,21 @@ void AHeatmap::CheckCharacters()
 			}
 		}
 	}
-	auto selectChar = Cast<ATDownCharacter>(CharactersArr[CharPtrNumber]);
-	if (selectChar)
+	if (CharNumberInWorld<CharactersArr.Num())
 	{
-		if (!CharPtr)
+		auto selectChar = Cast<ATDownCharacter>(CharactersArr[CharNumberInWorld]);
+		if (selectChar)
 		{
-			SetCharacter(selectChar);																								// Set pointer to Character 
+			if (!CharCurrentPtr)
+			{
+				SetCharacter(selectChar);																								// Set pointer to Character  fom CharNumberInWorld
+			}
 		}
 	}
 
 }
 
-void AHeatmap::MakeStringFromCoordinates()
+void AHeatmap::CollectData()
 {
 	//if (!FPlatformFileManager::Get().GetPlatformFile().DirectoryExists(*SaveDir))											// Dir exist?
 	//{
@@ -90,9 +106,9 @@ void AHeatmap::MakeStringFromCoordinates()
 	//}
 	if (bCollectData)
 	{
-		if (CharPtr)
+		if (CharCurrentPtr)
 		{
-			FVector CALoc = CharPtr->GetActorLocation();
+			FVector CALoc = CharCurrentPtr->GetActorLocation();
 
 			/*if (SplineDataSwitcher == ESplineDataSwitcher::ES_ArrayData)
 			{
@@ -106,7 +122,7 @@ void AHeatmap::MakeStringFromCoordinates()
 			}*/
 			if (SplineDataSwitcher == ESplineDataSwitcher::ES_StringData)
 			{				
-				auto FileToSaveArr = SaveDirectoryPath + "/" + LogFileName + "_" + FString::FromInt(CharPtrNumber) + ".txt";
+				auto FileToSaveArr = SaveDirectoryPath + "/" + LogFileName + "_" + FString::FromInt(CharNumberInWorld) + ".txt";
 
 				const FString& loc = CALoc.ToString();
 				const TCHAR* StrPtr = *loc;
@@ -122,120 +138,136 @@ void AHeatmap::MakeStringFromCoordinates()
 			}
 		}
 	}
+	if (CharCurrentPtr)
+	{
+		GetWorldTimerManager().SetTimer(ChekTimeHandler, this, &AHeatmap::CollectData, TimeBetweenChek, true);
+	}
 }
 
-void AHeatmap::BuildSplinePath()
+bool AHeatmap::BuildSplinePath(uint8 CharNumberIn)
 {
 	if (bBuildSpline)
 	{
-		PathSpline->ClearSplinePoints();
-
-		auto FileFrom = SaveDirectoryPath + "/" + LogFileName + "_" + FString::FromInt(CharPtrNumber) + ".txt";
-		if (!FPlatformFileManager::Get().GetPlatformFile().DirectoryExists(*FileFrom))
+		if (PathSpline)
 		{
-
-			//if (SplineDataSwitcher == ESplineDataSwitcher::ES_ArrayData)
-			//{
-			//	//TArray<int16> ArrayFromFile;
-			//	auto FileFrom = SaveDirectoryPath + "/" + "ArrayLocationLogs.txt";
-			//	LoadFileToArray(ArrayFromFile, *FileFrom, 0);
-			//	FVector SplinePoint;
-			//	SplinePoint.X = 0;
-			//	SplinePoint.Y = 0;
-			//	SplinePoint.Z = 0;
-			//	for (size_t i = 0; i < ArrayFromFile.Num(); i++)
-			//	{
-			//		SplinePoint.X = (ArrayFromFile[i] < 12800 && ArrayFromFile[i] > -12800 ? ArrayFromFile[i] : GetActorLocation().X);
-			//		i++;
-			//		SplinePoint.Y = (ArrayFromFile[i] < 12800 && ArrayFromFile[i] > -12800 ? ArrayFromFile[i] : GetActorLocation().Y);
-			//		i++;
-			//		SplinePoint.Z = (ArrayFromFile[i] < 12800 && ArrayFromFile[i] > -5000 ? ArrayFromFile[i] : GetActorLocation().Z);
-			//		PathSpline->AddSplineWorldPoint(SplinePoint);
-			//	}
-			//}
-			if (SplineDataSwitcher == ESplineDataSwitcher::ES_StringData)
+			if (PathSpline->GetNumberOfSplinePoints() != 0)
 			{
-				FString StringFromFile;
+				PathSpline->ClearSplinePoints();
+			}
+			auto FileFrom = SaveDirectoryPath + "/" + LogFileName + "_" + FString::FromInt(CharNumberIn) + ".txt";
+			bool DExists = FPlatformFileManager::Get().GetPlatformFile().FileExists(*FileFrom);//DirectoryExists(*FileFrom);
+			if (DExists)///////////////////
+			{
 
-				FFileHelper::LoadFileToString(StringFromFile, *FileFrom);
-
-				FVector ResultVector;
-				ResultVector.X = 0;
-				ResultVector.Y = 0;
-				ResultVector.Z = 0;
-
-				FString Ptr;
-				SplineCoordArr.Empty();
-
-				for (auto itr = 0; itr < StringFromFile.Len(); itr++)
+				//if (SplineDataSwitcher == ESplineDataSwitcher::ES_ArrayData)
+				//{
+				//	//TArray<int16> ArrayFromFile;
+				//	auto FileFrom = SaveDirectoryPath + "/" + "ArrayLocationLogs.txt";
+				//	LoadFileToArray(ArrayFromFile, *FileFrom, 0);
+				//	FVector SplinePoint;
+				//	SplinePoint.X = 0;
+				//	SplinePoint.Y = 0;
+				//	SplinePoint.Z = 0;
+				//	for (size_t i = 0; i < ArrayFromFile.Num(); i++)
+				//	{
+				//		SplinePoint.X = (ArrayFromFile[i] < 12800 && ArrayFromFile[i] > -12800 ? ArrayFromFile[i] : GetActorLocation().X);
+				//		i++;
+				//		SplinePoint.Y = (ArrayFromFile[i] < 12800 && ArrayFromFile[i] > -12800 ? ArrayFromFile[i] : GetActorLocation().Y);
+				//		i++;
+				//		SplinePoint.Z = (ArrayFromFile[i] < 12800 && ArrayFromFile[i] > -5000 ? ArrayFromFile[i] : GetActorLocation().Z);
+				//		PathSpline->AddSplineWorldPoint(SplinePoint);
+				//	}
+				//}
+				if (SplineDataSwitcher == ESplineDataSwitcher::ES_StringData)
 				{
-					Ptr = TEXT("line" + FString::FromInt(itr));
-					const TCHAR* MatchFind = FCString::Strfind(*StringFromFile, *Ptr);
-					if (MatchFind != NULL)
+					FString StringFromFile;
+
+					FFileHelper::LoadFileToString(StringFromFile, *FileFrom);
+
+					FVector ResultVector;
+					ResultVector.X = 0;
+					ResultVector.Y = 0;
+					ResultVector.Z = 0;
+
+					FString Ptr;
+					SplineCoordArr.Empty();
+
+					for (auto itr = 0; itr < StringFromFile.Len(); itr++)
 					{
-						FParse::Value(MatchFind, TEXT("X="), ResultVector.X);
-						FParse::Value(MatchFind, TEXT("Y="), ResultVector.Y);
-						FParse::Value(MatchFind, TEXT("Z="), ResultVector.Z);
-
-						PathSpline->AddSplineWorldPoint(ResultVector);
-						SplineCoordArr.Add(ResultVector);
-					}
-					else break;
-				}
-
-				if (ParticlesArr.Num() > 0)
-				{
-					for (auto i = 0; i < ParticlesArr.Num(); i++)
-					{
-						
-						UParticleSystemComponent* D = Cast<UParticleSystemComponent>(ParticlesArr[i]);
-						if (D != NULL)	
-							D->DeactivateSystem();
-					}
-					ParticlesArr.Empty();
-				}
-
-				int32 numSplinePoints = PathSpline->GetNumberOfSplinePoints();
-				for (auto pointIdx = 0; pointIdx < numSplinePoints; pointIdx++)
-				{
-					const FName Source = FName(TEXT("Source"));
-					const FName SourceTan = FName(TEXT("Source_Tan"));
-					const FName Target = FName(TEXT("Target"));
-					const FName TargetTan = FName(TEXT("Target_Tan"));
-
-					FVector sourceBeamLocation = PathSpline->GetLocationAtSplinePoint(pointIdx, ESplineCoordinateSpace::World);
-					FRotator sourceBeamRot;
-					sourceBeamRot.Pitch = 0;
-					sourceBeamRot.Yaw = 0;
-					sourceBeamRot.Roll = 0;
-					float sourceDistanceAlongSpline = PathSpline->GetDistanceAlongSplineAtSplinePoint(pointIdx);
-					FVector sourceTangentAtDistance = PathSpline->GetTangentAtDistanceAlongSpline(sourceDistanceAlongSpline, ESplineCoordinateSpace::World);
-
-					FVector targetBeamLocation = PathSpline->GetLocationAtSplinePoint(pointIdx + 1, ESplineCoordinateSpace::World);
-					float targetDistanceAlongSpline = PathSpline->GetDistanceAlongSplineAtSplinePoint(pointIdx + 1);
-					FVector targetTangentAtDistance = PathSpline->GetTangentAtDistanceAlongSpline(targetDistanceAlongSpline, ESplineCoordinateSpace::World);
-					if (GetWorld())
-					{
-						UParticleSystemComponent* Spawner = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BeamParticle, sourceBeamLocation, sourceBeamRot, true);
-
-						UParticleSystemComponent* chek = Cast<UParticleSystemComponent>(Spawner);
-						if (chek)
+						Ptr = TEXT("line" + FString::FromInt(itr));
+						const TCHAR* MatchFind = FCString::Strfind(*StringFromFile, *Ptr);
+						if (MatchFind != NULL)
 						{
-							ParticlesArr.Add(Spawner);
-							if (Spawner)
+							FParse::Value(MatchFind, TEXT("X="), ResultVector.X);
+							FParse::Value(MatchFind, TEXT("Y="), ResultVector.Y);
+							FParse::Value(MatchFind, TEXT("Z="), ResultVector.Z);
+
+							PathSpline->AddSplineWorldPoint(ResultVector);
+							SplineCoordArr.Add(ResultVector);
+						}
+						else break;
+					}
+
+					if (ParticlesArr.Num() > 0)
+					{
+						for (auto i = 0; i < ParticlesArr.Num(); i++)
+						{
+
+							UParticleSystemComponent* D = Cast<UParticleSystemComponent>(ParticlesArr[i]);
+							if (D != NULL)
+								D->DeactivateSystem();
+						}
+						ParticlesArr.Empty();
+					}
+
+					int32 numSplinePoints = PathSpline->GetNumberOfSplinePoints();
+					for (auto pointIdx = 0; pointIdx < numSplinePoints; pointIdx++)
+					{
+						const FName Source = FName(TEXT("Source"));
+						const FName SourceTan = FName(TEXT("Source_Tan"));
+						const FName Target = FName(TEXT("Target"));
+						const FName TargetTan = FName(TEXT("Target_Tan"));
+						const FName TeamColorParam = FName(TEXT("TeamColor"));
+
+						FVector sourceBeamLocation = PathSpline->GetLocationAtSplinePoint(pointIdx, ESplineCoordinateSpace::World);
+						FRotator sourceBeamRot;
+						sourceBeamRot.Pitch = 0;
+						sourceBeamRot.Yaw = 0;
+						sourceBeamRot.Roll = 0;
+						float sourceDistanceAlongSpline = PathSpline->GetDistanceAlongSplineAtSplinePoint(pointIdx);
+						FVector sourceTangentAtDistance = PathSpline->GetTangentAtDistanceAlongSpline(sourceDistanceAlongSpline, ESplineCoordinateSpace::World);
+
+						FVector targetBeamLocation = PathSpline->GetLocationAtSplinePoint(pointIdx + 1, ESplineCoordinateSpace::World);
+						float targetDistanceAlongSpline = PathSpline->GetDistanceAlongSplineAtSplinePoint(pointIdx + 1);
+						FVector targetTangentAtDistance = PathSpline->GetTangentAtDistanceAlongSpline(targetDistanceAlongSpline, ESplineCoordinateSpace::World);
+
+						if (GetWorld())
+						{
+							UParticleSystemComponent* Spawner = UGameplayStatics::SpawnEmitterAtLocation(this, BeamParticle, sourceBeamLocation, sourceBeamRot, true);////ftom world to this
+
+							UParticleSystemComponent* chek = Cast<UParticleSystemComponent>(Spawner);
+							if (chek)
 							{
-								Spawner->SetVectorParameter(Source, sourceBeamLocation);
-								Spawner->SetVectorParameter(SourceTan, sourceTangentAtDistance);
-								Spawner->SetVectorParameter(Target, targetBeamLocation);
-								Spawner->SetVectorParameter(TargetTan, targetTangentAtDistance);
+								ParticlesArr.Add(Spawner);
+								if (Spawner)
+								{
+									Spawner->SetVectorParameter(Source, sourceBeamLocation);
+									Spawner->SetVectorParameter(SourceTan, sourceTangentAtDistance);
+									Spawner->SetVectorParameter(Target, targetBeamLocation);
+									Spawner->SetVectorParameter(TargetTan, targetTangentAtDistance);
+									Spawner->SetColorParameter(TeamColorParam, TeamColor);
+								}
 							}
 						}
+						
 					}
+					return true;//
 				}
 			}
+			
 		}
 	}
-
+	return false;
 }
 
 bool AHeatmap::SaveArrayToFile(const TArray<int16>& Array, const TCHAR * Filename, IFileManager * FileManager, uint32 WriteFlags) const
@@ -272,13 +304,46 @@ bool AHeatmap::LoadFileToArray(TArray<int16>& Result, const TCHAR * Filename, ui
 
 void AHeatmap::PostEditChangeProperty(FPropertyChangedEvent & PropertyChangedEvent)
 {
-	BuildSplinePath();
 	Super::PostEditChangeProperty(PropertyChangedEvent);
+
+	if (ParticlesArr.Num() > 0)
+	{
+		for (auto i = 0; i < ParticlesArr.Num(); i++)
+		{
+
+			UParticleSystemComponent* D = Cast<UParticleSystemComponent>(ParticlesArr[i]);
+			if (D != NULL)
+				D->DeactivateSystem();
+		}
+		ParticlesArr.Empty();
+	}
+	FText CharctesP= FText::FromString(FString::FromInt(CharNumberInWorld));// = FString::FromInt(CharNumberInWorld);
+	TextComponent->SetText(CharctesP);
+	BuildSplinePath(CharNumberInWorld);
+
+}
+
+void AHeatmap::BeginDestroy() //////////////////////
+{
+	Super::BeginDestroy();
+
+	if (ParticlesArr.Num() > 0)
+	{
+		for (auto i = 0; i < ParticlesArr.Num(); i++)
+		{
+
+			UParticleSystemComponent* D = Cast<UParticleSystemComponent>(ParticlesArr[i]);
+			if (D != NULL)
+				D->DeactivateSystem();
+		}
+		ParticlesArr.Empty();
+	}
+	
 }
 
 void AHeatmap::SetCharacter(ATDownCharacter * newCharacter)
 {
-	CharPtr = newCharacter;
+	CharCurrentPtr = newCharacter;
 }
 
 
