@@ -71,6 +71,23 @@ void AHeatmapManager::CollectHeatOnLevel()
 	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Green, "Founded by HeatmapManager is " + FString::FromInt(FoundedHeatmapArr.Num()) + " heatmaps on level");
 }
 
+void AHeatmapManager::SpawnHeatmapsOnLevel()
+{
+
+	if (FoundedHeatmapArr.Num()<FoundedCharactersArr.Num())
+	{
+		FTransform SpawnTS;
+		//SpawnTS.SetLocation();
+
+		AHeatmap* SpawnHM = Cast<AHeatmap>(UGameplayStatics::BeginDeferredActorSpawnFromClass(GetWorld(), HeatmapToSpawn, SpawnTS));
+
+		if (SpawnHM)
+		{
+		}
+		UGameplayStatics::FinishSpawningActor(SpawnHM, SpawnTS);
+	}
+}
+
 void AHeatmapManager::SetUpHeatmaps()
 {
 	int8 i = 0;
@@ -89,23 +106,6 @@ void AHeatmapManager::SetUpHeatmaps()
 			}
 			Setuper->SetCharNumberInWorld(i);
 		}
-	}
-}
-
-void AHeatmapManager::SpawnHeatmapsOnLevel()
-{
-
-	if (FoundedHeatmapArr.Num()<FoundedCharactersArr.Num())
-	{
-		FTransform SpawnTS;
-		//SpawnTS.SetLocation();
-
-		AHeatmap* SpawnHM = Cast<AHeatmap>(UGameplayStatics::BeginDeferredActorSpawnFromClass(GetWorld(), HeatmapToSpawn, SpawnTS));
-
-		if (SpawnHM)
-		{
-		}
-		UGameplayStatics::FinishSpawningActor(SpawnHM, SpawnTS);
 	}
 }
 
