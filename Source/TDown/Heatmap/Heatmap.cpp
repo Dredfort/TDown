@@ -48,10 +48,10 @@ void AHeatmap::BeginPlay()
 		if (bCollectCharacters)
 		{
 			CollectCharacters();
-			GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Green, "Characters on map is: " + FString::FromInt(CharactersArr.Num()));		
+			//GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Green, "Characters on map is: " + FString::FromInt(CharactersArr.Num()));		
 			if (CharCurrentPtr)
 			{
-				GetWorldTimerManager().SetTimer(ChekTimeHandler, this, &AHeatmap::CollectData, TimeBetweenChek, true);
+				GetWorldTimerManager().SetTimer(ChekTimeHandler, this, &AHeatmap::CollectData, UpdateTimeBetweenChek, true);
 			}
 		}
 	}
@@ -140,11 +140,11 @@ void AHeatmap::CollectData()
 	}
 	if (CharCurrentPtr)
 	{
-		GetWorldTimerManager().SetTimer(ChekTimeHandler, this, &AHeatmap::CollectData, TimeBetweenChek, true);
+		GetWorldTimerManager().SetTimer(ChekTimeHandler, this, &AHeatmap::CollectData, UpdateTimeBetweenChek, true);
 	}
 }
 
-bool AHeatmap::BuildSplinePath(uint8 CharNumberIn)
+bool AHeatmap::BuildSplinePath(uint8 CharNumberIn /*= 0*/, bool isActive/*=true */)
 {
 	if (bBuildSpline)
 	{
@@ -208,7 +208,7 @@ bool AHeatmap::BuildSplinePath(uint8 CharNumberIn)
 						else break;
 					}
 
-					if (ParticlesArr.Num() > 0)
+					if (ParticlesArr.Num() > 0)//ParticlesArr.Num() > 0
 					{
 						for (auto i = 0; i < ParticlesArr.Num(); i++)
 						{
@@ -256,16 +256,28 @@ bool AHeatmap::BuildSplinePath(uint8 CharNumberIn)
 									Spawner->SetVectorParameter(Target, targetBeamLocation);
 									Spawner->SetVectorParameter(TargetTan, targetTangentAtDistance);
 									Spawner->SetColorParameter(TeamColorParam, TeamColor);
+
 								}
 							}
 						}
-						
+
 					}
 					return true;//
 				}
 			}
-			
+
 		}
+	}
+	if (isActive == false)																	/// clearing particles
+	{
+		for (auto i = 0; i < ParticlesArr.Num(); i++)
+		{
+
+			UParticleSystemComponent* D = Cast<UParticleSystemComponent>(ParticlesArr[i]);
+			if (D != NULL)
+				D->DeactivateSystem();
+		}
+		ParticlesArr.Empty();
 	}
 	return false;
 }
@@ -327,7 +339,7 @@ void AHeatmap::BeginDestroy() //////////////////////
 {
 	Super::BeginDestroy();
 
-	if (ParticlesArr.Num() > 0)
+	/*if (ParticlesArr.Num() > 0)
 	{
 		for (auto i = 0; i < ParticlesArr.Num(); i++)
 		{
@@ -337,13 +349,18 @@ void AHeatmap::BeginDestroy() //////////////////////
 				D->DeactivateSystem();
 		}
 		ParticlesArr.Empty();
-	}
+	}*/
 	
 }
 
 void AHeatmap::SetCharacter(ATDownCharacter * newCharacter)
 {
 	CharCurrentPtr = newCharacter;
+}
+
+void AHeatmap::SetCharNumberInWorld(uint8  newPosition)
+{
+	CharNumberInWorld = newPosition;
 }
 
 

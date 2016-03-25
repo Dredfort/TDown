@@ -41,7 +41,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatMap")
 	class USplineComponent* PathSpline;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatMap")
-		float TimeBetweenChek = 3;
+		float UpdateTimeBetweenChek = 3;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatMap")
 		bool bBuildSpline = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatMap")
@@ -58,7 +58,7 @@ public:
 		void CollectCharacters();
 
 	UFUNCTION(BlueprintCallable, Category = "_HeatMap")
-		bool BuildSplinePath( uint8 CharNumberIn = 0 );
+		bool BuildSplinePath( uint8 CharNumberIn = 0, bool isActive=true );
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatMap")
 	FString SaveDirectoryPath = "E:/UE4_Projects/TDown/HeatmapLogFolder";
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatMap")
@@ -77,9 +77,11 @@ public:
 
 	TArray<UParticleSystemComponent*> ParticlesArr;
 	void SetCharacter(ATDownCharacter* newCharacter);
+	void SetCharNumberInWorld(uint8);
+	TArray<FVector> GetArrayOfSplineCoords() { return SplineCoordArr; };
 private:
-	FString StringOfCoords;
 	TArray<FVector> SplineCoordArr;
+	FString StringOfCoords;
 	TArray<ATDownCharacter*> CharactersArr;
 	UWorld* cWorld;
 	FTimerHandle ChekTimeHandler;
