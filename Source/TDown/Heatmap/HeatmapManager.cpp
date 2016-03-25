@@ -35,7 +35,7 @@ void AHeatmapManager::BeginPlay()
 	CollectCharacters();
 	CollectHeatOnLevel();
 	SetUpHeatmaps();
-	CollectData(true);
+	StartCollectData(true);
 }
 
 void AHeatmapManager::CollectCharacters()
@@ -109,7 +109,7 @@ void AHeatmapManager::SetUpHeatmaps()
 	}
 }
 
-void AHeatmapManager::CollectData(bool state)
+void AHeatmapManager::StartCollectData(bool state)
 {
 	for (int i = 0; i < FoundedHeatmapArr.Num();i++)
 	{
@@ -130,11 +130,51 @@ void AHeatmapManager::BuildSplines(bool state)
 			SplineBuilder->SetCharNumberInWorld(i);
 			SplineBuilder->BuildSplinePath(i, state);
 
-			FromSplineCoordArr.Append(SplineBuilder->GetArrayOfSplineCoords()); /// collecting all spline coordinates to the array.
-		}
-	if (state)
+			//CoordFromSplineArr.Append(SplineBuilder->GetArrayOfSplineCoords()); /// collecting all spline coordinates to the array.
+		}	
+}
+
+void AHeatmapManager::CollectDataFromFiles()
+{
+	CoordFromSplineArr.Empty();
+
+	for (auto i = 0; i < FoundedHeatmapArr.Num(); i++)
 	{
+		auto CharNumberIn = i;
+		
+		auto FileFrom = SaveDirectoryPath + "/" + LogFileName + "_" + FString::FromInt(CharNumberIn) + ".txt";
+		bool DExists = FPlatformFileManager::Get().GetPlatformFile().FileExists(*FileFrom);//DirectoryExists(*FileFrom);
+		if (DExists)
+		{
+			FString StringFromFile;
+			FFileHelper::LoadFileToString(StringFromFile, *FileFrom);
+
+			FVector ResultVector;
+			ResultVector.X = 0;
+			ResultVector.Y = 0;
+			ResultVector.Z = 0;
+
+			FString Ptr;
+			CoordFromSplineArr.Empty();
+
+			for (auto itr = 0; itr < StringFromFile.Len(); itr++)
+			{
+				Ptr = TEXT("line" + FString::FromInt(itr));
+				const TCHAR* MatchFind = FCString::Strfind(*StringFromFile, *Ptr);
+				if (MatchFind != NULL)
+				{
+					FParse::Value(MatchFind, TEXT("X="), ResultVector.X);
+					FParse::Value(MatchFind, TEXT("Y="), ResultVector.Y);
+					FParse::Value(MatchFind, TEXT("Z="), ResultVector.Z);
+
+					CoordFromSplineArr.Add(ResultVector);
+				}
+				else break;
+			}
+		}
+		else break;
 	}
+
 }
 
 void AHeatmapManager::PostEditChangeProperty(FPropertyChangedEvent & PropertyChangedEvent)
@@ -148,4 +188,9 @@ void AHeatmapManager::PostEditChangeProperty(FPropertyChangedEvent & PropertyCha
 
 	FText CharctesP = FText::FromString(FString::FromInt(FoundedHeatmapArr.Num()));// = FString::FromInt(CharNumberInWorld);
 	TextComponent->SetText(CharctesP);
+
+	if (bRefresh)
+	{
+		CollectDataFromFiles();
+	}
 }

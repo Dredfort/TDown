@@ -26,9 +26,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatmapManager_")
 		bool bRefresh;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatmapManager_")
-	TSubclassOf<class AHeatmap> HeatmapToSpawn;	
+		TSubclassOf<class AHeatmap> HeatmapToSpawn;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatmapManager_")
-		TSubclassOf<ATDownCharacter> CharacterClassToFind;
+		TSubclassOf<class ATDownCharacter> CharacterClassToFind;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatmapManager_")
 		bool bBuildSplinesFromHM;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatmapManager_")
@@ -36,7 +36,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatmapManager_")
 		float UpdTime = 1;
 
-	
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatMap")
+		FString SaveDirectoryPath = "E:/UE4_Projects/TDown/HeatmapLogFolder";
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatMap")
+		FString LogFileName = "LocationLogs";
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;		
@@ -45,12 +50,15 @@ public:
 	void CollectHeatOnLevel();
 	void SetUpHeatmaps();
 	void SpawnHeatmapsOnLevel();
-	void CollectData(bool state=false);
+	void StartCollectData(bool state=false);
 	void BuildSplines(bool state);
+
+	void CollectDataFromFiles();
 
 	TArray<ATDownCharacter*> FoundedCharactersArr;
 	TArray<AHeatmap*> FoundedHeatmapArr;
-	TArray<FVector> FromSplineCoordArr;
+	UPROPERTY(BlueprintReadWrite, Category = "_HeatmapManager_")
+	TArray<FVector> CoordFromSplineArr;
 
 	
 	/*void BeginDestroy() override;

@@ -58,7 +58,8 @@ public:
 		void CollectCharacters();
 
 	UFUNCTION(BlueprintCallable, Category = "_HeatMap")
-		bool BuildSplinePath( uint8 CharNumberIn = 0, bool isActive=true );
+		bool BuildSplinePath( uint8 CharNumberIn = 0, bool isActive=true );	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatMap")
 	FString SaveDirectoryPath = "E:/UE4_Projects/TDown/HeatmapLogFolder";
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatMap")
