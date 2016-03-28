@@ -3,7 +3,7 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
-#include "Heatmap.generated.h"
+#include "HeatmapDataCollector.generated.h"
 
 class ATDownCharacter;
 
@@ -15,13 +15,13 @@ enum class ESplineDataSwitcher : uint8
 };
 
 UCLASS()
-class TDOWN_API AHeatmap : public AActor
+class TDOWN_API AHeatmapDataCollector : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	AHeatmap(const FObjectInitializer& ObjectInitializer);
+	AHeatmapDataCollector(const FObjectInitializer& ObjectInitializer);
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;	
 	// Called every frame

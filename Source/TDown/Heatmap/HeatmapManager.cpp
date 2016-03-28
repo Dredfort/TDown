@@ -4,7 +4,7 @@
 #include "HeatmapManager.h"
 #include "TDownCharacter.h"
 #include "Kismet/GameplayStatics.h"
-#include "Heatmap.h"
+#include "HeatmapDataCollector.h"
 
 
 // Sets default values
@@ -35,7 +35,7 @@ void AHeatmapManager::BeginPlay()
 	CollectCharacters();
 	CollectHeatOnLevel();
 	SetUpHeatmaps();
-	StartCollectData(true);
+	StartCollectData(bCollectDataFromHM);
 }
 
 void AHeatmapManager::CollectCharacters()
@@ -61,7 +61,7 @@ void AHeatmapManager::CollectHeatOnLevel()
 
 	for (auto i = 0; i < FoundActorsArr.Num(); i++)
 	{
-		auto FoundActor = Cast<AHeatmap>(FoundActorsArr[i]);
+		auto FoundActor = Cast<AHeatmapDataCollector>(FoundActorsArr[i]);
 		if (FoundActor && !FoundedHeatmapArr.Contains(FoundActor))
 		{
 			FoundedHeatmapArr.Add(FoundActor);
@@ -79,7 +79,7 @@ void AHeatmapManager::SpawnHeatmapsOnLevel()
 		FTransform SpawnTS;
 		//SpawnTS.SetLocation();
 
-		AHeatmap* SpawnHM = Cast<AHeatmap>(UGameplayStatics::BeginDeferredActorSpawnFromClass(GetWorld(), HeatmapToSpawn, SpawnTS));
+		AHeatmapDataCollector* SpawnHM = Cast<AHeatmapDataCollector>(UGameplayStatics::BeginDeferredActorSpawnFromClass(GetWorld(), HeatmapToSpawn, SpawnTS));
 
 		if (SpawnHM)
 		{
@@ -93,18 +93,21 @@ void AHeatmapManager::SetUpHeatmaps()
 	int8 i = 0;
 	for ( i = 0; i < FoundedHeatmapArr.Num(); i++)
 	{
-		AHeatmap* Setuper = Cast<AHeatmap>(FoundedHeatmapArr[i]);
-		if (Setuper)
+		if (FoundedHeatmapArr[i] !=NULL)
 		{
-			Setuper->bCollectCharacters = false;
-			Setuper->UpdateTimeBetweenChek = UpdTime;
-			Setuper->bBuildSpline = bBuildSplinesFromHM;
-			Setuper->bCollectData = bCollectDataFromHM;
-			if (FoundedCharactersArr.Num() !=0)
+			AHeatmapDataCollector* Setuper = Cast<AHeatmapDataCollector>(FoundedHeatmapArr[i]);
+			if (Setuper)
 			{
-				Setuper->SetCharacter(FoundedCharactersArr[i]);
+				Setuper->bCollectCharacters = false;
+				Setuper->UpdateTimeBetweenChek = UpdTime;
+				Setuper->bBuildSpline = bBuildSplinesFromHM;
+				Setuper->bCollectData = bCollectDataFromHM;
+				if (FoundedCharactersArr.Num() != 0 && FoundedCharactersArr[i] != NULL)
+				{
+					Setuper->SetCharacter(FoundedCharactersArr[i]);
+				}
+				Setuper->SetCharNumberInWorld(i);
 			}
-			Setuper->SetCharNumberInWorld(i);
 		}
 	}
 }
@@ -113,7 +116,7 @@ void AHeatmapManager::StartCollectData(bool state)
 {
 	for (int i = 0; i < FoundedHeatmapArr.Num();i++)
 	{
-		auto DataCollector = Cast<AHeatmap>(FoundedHeatmapArr[i]);
+		auto DataCollector = Cast<AHeatmapDataCollector>(FoundedHeatmapArr[i]);
 		DataCollector->CollectData();
 	}
 }
@@ -122,22 +125,20 @@ void AHeatmapManager::BuildSplines(bool state)
 {
 		for (int i = 0; i < FoundedHeatmapArr.Num(); i++)
 		{
-			auto SplineBuilder = Cast<AHeatmap>(FoundedHeatmapArr[i]);
+			auto SplineBuilder = Cast<AHeatmapDataCollector>(FoundedHeatmapArr[i]);
 			if (FoundedCharactersArr.Num() != 0)
 			{
 				SplineBuilder->SetCharacter(FoundedCharactersArr[i]);
 			}
 			SplineBuilder->SetCharNumberInWorld(i);
 			SplineBuilder->BuildSplinePath(i, state);
-
-			//CoordFromSplineArr.Append(SplineBuilder->GetArrayOfSplineCoords()); /// collecting all spline coordinates to the array.
 		}	
 }
 
 void AHeatmapManager::CollectDataFromFiles()
 {
 	CoordFromSplineArr.Empty();
-
+	
 	for (auto i = 0; i < FoundedHeatmapArr.Num(); i++)
 	{
 		auto CharNumberIn = i;
@@ -150,12 +151,12 @@ void AHeatmapManager::CollectDataFromFiles()
 			FFileHelper::LoadFileToString(StringFromFile, *FileFrom);
 
 			FVector ResultVector;
-			ResultVector.X = 0;
+			FVector ResultVectorFix;
+			/*ResultVector.X = 0;
 			ResultVector.Y = 0;
-			ResultVector.Z = 0;
+			ResultVector.Z = 0;*/
 
 			FString Ptr;
-			CoordFromSplineArr.Empty();
 
 			for (auto itr = 0; itr < StringFromFile.Len(); itr++)
 			{
@@ -166,14 +167,46 @@ void AHeatmapManager::CollectDataFromFiles()
 					FParse::Value(MatchFind, TEXT("X="), ResultVector.X);
 					FParse::Value(MatchFind, TEXT("Y="), ResultVector.Y);
 					FParse::Value(MatchFind, TEXT("Z="), ResultVector.Z);
-
+										
 					CoordFromSplineArr.Add(ResultVector);
+
+					/// fix coordinates
+					auto fixX = FMath::Fmod(ResultVector.X,100);
+					auto fixY = FMath::Fmod(ResultVector.Y, 100);
+					auto fixZ = FMath::Fmod(ResultVector.Z, 100);
+
+					if (fixX > 50)
+					{
+						ResultVectorFix.X = (ResultVector.X - fixX) + 100;
+					}
+					else ResultVectorFix.X = ResultVector.X - fixX;
+
+					if (fixY > 50)
+					{
+						ResultVectorFix.Y = (ResultVector.Y - fixY) + 100;
+					}
+					else ResultVectorFix.Y = ResultVector.Y - fixY;
+
+					if (fixZ > 50)
+					{
+						ResultVectorFix.Z = 0;// (ResultVector.Z - fixZ) + 100;
+					}
+					else ResultVectorFix.Z = 0;// ResultVector.Z - fixZ;
+
+					FixedCoordinatesArr.Add(ResultVectorFix);
+					// start so spawning grid
+					
 				}
 				else break;
 			}
 		}
 		else break;
 	}
+	
+}
+
+void AHeatmapManager::BuildHeatMapTiles()
+{
 
 }
 

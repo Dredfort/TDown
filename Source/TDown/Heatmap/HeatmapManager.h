@@ -5,7 +5,7 @@
 #include "GameFramework/Actor.h"
 #include "HeatmapManager.generated.h"
 
-class AHeatmap;
+class AHeatmapDataCollector;
 class ATDownCharacter;
 
 UCLASS()
@@ -26,7 +26,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatmapManager_")
 		bool bRefresh;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatmapManager_")
-		TSubclassOf<class AHeatmap> HeatmapToSpawn;
+		TSubclassOf<class AHeatmapDataCollector> HeatmapToSpawn;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatmapManager_")
 		TSubclassOf<class ATDownCharacter> CharacterClassToFind;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatmapManager_")
@@ -36,6 +36,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatmapManager_")
 		float UpdTime = 1;
 
+
+	UPROPERTY(BlueprintReadWrite, Category = "_HeatmapManager_")
+	TArray<FVector> CoordFromSplineArr;
+	UPROPERTY(BlueprintReadWrite, Category = "_HeatmapManager_")
+	TArray<FVector>FixedCoordinatesArr;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatMap")
@@ -54,11 +59,10 @@ public:
 	void BuildSplines(bool state);
 
 	void CollectDataFromFiles();
+	void BuildHeatMapTiles();
 
 	TArray<ATDownCharacter*> FoundedCharactersArr;
-	TArray<AHeatmap*> FoundedHeatmapArr;
-	UPROPERTY(BlueprintReadWrite, Category = "_HeatmapManager_")
-	TArray<FVector> CoordFromSplineArr;
+	TArray<AHeatmapDataCollector*> FoundedHeatmapArr;
 
 	
 	/*void BeginDestroy() override;

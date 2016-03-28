@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "TDown.h"
-#include "Heatmap.h"
+#include "HeatmapDataCollector.h"
 #include "TDownCharacter.h"
 #include "EngineGlobals.h"
 #include "EngineUtils.h"
@@ -10,7 +10,7 @@
 
 
 // Sets default values
-AHeatmap::AHeatmap(const FObjectInitializer& ObjectInitializer)
+AHeatmapDataCollector::AHeatmapDataCollector(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer)
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -38,7 +38,7 @@ AHeatmap::AHeatmap(const FObjectInitializer& ObjectInitializer)
 }
 
 // Called when the game starts or when spawned
-void AHeatmap::BeginPlay()
+void AHeatmapDataCollector::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -51,19 +51,19 @@ void AHeatmap::BeginPlay()
 			//GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Green, "Characters on map is: " + FString::FromInt(CharactersArr.Num()));		
 			if (CharCurrentPtr)
 			{
-				GetWorldTimerManager().SetTimer(ChekTimeHandler, this, &AHeatmap::CollectData, UpdateTimeBetweenChek, true);
+				GetWorldTimerManager().SetTimer(ChekTimeHandler, this, &AHeatmapDataCollector::CollectData, UpdateTimeBetweenChek, true);
 			}
 		}
 	}
 }
 
 // Called every frame
-void AHeatmap::Tick(float DeltaTime)
+void AHeatmapDataCollector::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 }
 
-void AHeatmap::CollectCharacters()
+void AHeatmapDataCollector::CollectCharacters()
 {
 	if (cWorld)
 	{
@@ -92,7 +92,7 @@ void AHeatmap::CollectCharacters()
 
 }
 
-void AHeatmap::CollectData()
+void AHeatmapDataCollector::CollectData()
 {
 	//if (!FPlatformFileManager::Get().GetPlatformFile().DirectoryExists(*SaveDir))											// Dir exist?
 	//{
@@ -140,11 +140,11 @@ void AHeatmap::CollectData()
 	}
 	if (CharCurrentPtr)
 	{
-		GetWorldTimerManager().SetTimer(ChekTimeHandler, this, &AHeatmap::CollectData, UpdateTimeBetweenChek, true);
+		GetWorldTimerManager().SetTimer(ChekTimeHandler, this, &AHeatmapDataCollector::CollectData, UpdateTimeBetweenChek, true);
 	}
 }
 
-bool AHeatmap::BuildSplinePath(uint8 CharNumberIn /*= 0*/, bool isActive/*=true */)
+bool AHeatmapDataCollector::BuildSplinePath(uint8 CharNumberIn /*= 0*/, bool isActive/*=true */)
 {
 	if (bBuildSpline)
 	{
@@ -282,7 +282,7 @@ bool AHeatmap::BuildSplinePath(uint8 CharNumberIn /*= 0*/, bool isActive/*=true 
 	return false;
 }
 
-bool AHeatmap::SaveArrayToFile(const TArray<int16>& Array, const TCHAR * Filename, IFileManager * FileManager, uint32 WriteFlags) const
+bool AHeatmapDataCollector::SaveArrayToFile(const TArray<int16>& Array, const TCHAR * Filename, IFileManager * FileManager, uint32 WriteFlags) const
 {
 	FArchive* Ar = FileManager->CreateFileWriter(Filename, WriteFlags);
 	if (!Ar)
@@ -294,7 +294,7 @@ bool AHeatmap::SaveArrayToFile(const TArray<int16>& Array, const TCHAR * Filenam
 	return true;
 }
 
-bool AHeatmap::LoadFileToArray(TArray<int16>& Result, const TCHAR * Filename, uint32 Flags)
+bool AHeatmapDataCollector::LoadFileToArray(TArray<int16>& Result, const TCHAR * Filename, uint32 Flags)
 {
 	FArchive* Reader = IFileManager::Get().CreateFileReader(Filename, Flags);
 	if (!Reader)
@@ -314,7 +314,7 @@ bool AHeatmap::LoadFileToArray(TArray<int16>& Result, const TCHAR * Filename, ui
 	return Success;
 }
 
-void AHeatmap::PostEditChangeProperty(FPropertyChangedEvent & PropertyChangedEvent)
+void AHeatmapDataCollector::PostEditChangeProperty(FPropertyChangedEvent & PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 
@@ -335,11 +335,11 @@ void AHeatmap::PostEditChangeProperty(FPropertyChangedEvent & PropertyChangedEve
 
 }
 
-void AHeatmap::BeginDestroy() //////////////////////
+void AHeatmapDataCollector::BeginDestroy() //////////////////////
 {
 	Super::BeginDestroy();
 
-	/*if (ParticlesArr.Num() > 0)
+	if (ParticlesArr.Num() > 0)
 	{
 		for (auto i = 0; i < ParticlesArr.Num(); i++)
 		{
@@ -349,16 +349,16 @@ void AHeatmap::BeginDestroy() //////////////////////
 				D->DeactivateSystem();
 		}
 		ParticlesArr.Empty();
-	}*/
+	}
 	
 }
 
-void AHeatmap::SetCharacter(ATDownCharacter * newCharacter)
+void AHeatmapDataCollector::SetCharacter(ATDownCharacter * newCharacter)
 {
 	CharCurrentPtr = newCharacter;
 }
 
-void AHeatmap::SetCharNumberInWorld(uint8  newPosition)
+void AHeatmapDataCollector::SetCharNumberInWorld(uint8  newPosition)
 {
 	CharNumberInWorld = newPosition;
 }
