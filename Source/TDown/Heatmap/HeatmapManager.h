@@ -22,13 +22,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatmapManager_")
 		UTextRenderComponent* TextComponent;
 
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatmapManager_")
+	TSubclassOf<AActor> TileToSpawn;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatmapManager_")
 		bool bRefresh;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatmapManager_")
 		TSubclassOf<class AHeatmapDataCollector> HeatmapToSpawn;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatmapManager_")
-		TSubclassOf<class ATDownCharacter> CharacterClassToFind;
+		TSubclassOf<class ACharacter> CharacterClassToFind;	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatmapManager_")
 		bool bBuildSplinesFromHM;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatmapManager_")
@@ -59,11 +60,12 @@ public:
 	void BuildSplines(bool state);
 
 	void CollectDataFromFiles();
-	void BuildHeatMapTiles();
+	void BuildHeatMapTiles(bool isBuild);
 
 	TArray<ATDownCharacter*> FoundedCharactersArr;
 	TArray<AHeatmapDataCollector*> FoundedHeatmapArr;
-
+	//private:
+	TArray<AActor*> BuildedTilesArr;
 	
 	/*void BeginDestroy() override;
 	void EndPlay(const EEndPlayReason::Type EndPlayReason)override;*/

@@ -93,16 +93,16 @@ void AHeatmapManager::SetUpHeatmaps()
 	int8 i = 0;
 	for ( i = 0; i < FoundedHeatmapArr.Num(); i++)
 	{
-		if (FoundedHeatmapArr[i] !=NULL)
+		if (FoundedHeatmapArr[i] !=NULL )
 		{
-			AHeatmapDataCollector* Setuper = Cast<AHeatmapDataCollector>(FoundedHeatmapArr[i]);
-			if (Setuper)
+			AHeatmapDataCollector* Setuper = Cast<AHeatmapDataCollector>(FoundedHeatmapArr[i]);			
+			if (Setuper )
 			{
 				Setuper->bCollectCharacters = false;
 				Setuper->UpdateTimeBetweenChek = UpdTime;
 				Setuper->bBuildSpline = bBuildSplinesFromHM;
 				Setuper->bCollectData = bCollectDataFromHM;
-				if (FoundedCharactersArr.Num() != 0 && FoundedCharactersArr[i] != NULL)
+				if (FoundedCharactersArr.Num() != 0 && FoundedCharactersArr.Num() > i)/////
 				{
 					Setuper->SetCharacter(FoundedCharactersArr[i]);
 				}
@@ -205,9 +205,81 @@ void AHeatmapManager::CollectDataFromFiles()
 	
 }
 
-void AHeatmapManager::BuildHeatMapTiles()
+void AHeatmapManager::BuildHeatMapTiles(bool isBuild)
 {
 
+	//destroy all actors builder before
+	if (!isBuild && BuildedTilesArr.Num() > 0)
+	{
+		TArray<AActor*> FoundActorsArr;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), TileToSpawn, FoundActorsArr);
+		if (FoundActorsArr.Num()>0)
+		{
+			for (auto i = 0; i < FoundActorsArr.Num(); i++)
+			{
+				auto FoundActor = Cast<AActor>(FoundActorsArr[i]);
+				if (FoundActor)
+				{
+					FoundActor->Destroy();;
+				}
+			}
+		}
+		for (auto i = 0; i < BuildedTilesArr.Num(); i++)
+		{
+			AActor* D = Cast<AActor>(BuildedTilesArr[i]);
+			if (D != NULL)
+				D->Destroy();
+		}
+		BuildedTilesArr.Empty();
+	}
+	else
+	{
+
+		for (auto i = 0; i < FixedCoordinatesArr.Num(); i++)
+		{
+			if (TileToSpawn)
+			{
+				FTransform SpawnTS;
+				FVector SpawnLoc;
+				SpawnLoc.X = FixedCoordinatesArr[i].X;
+				SpawnLoc.Y = FixedCoordinatesArr[i].Y;
+				SpawnLoc.Z = GetActorLocation().Z;
+				SpawnTS.SetLocation(SpawnLoc);
+				FLinearColor PColor;
+				
+				AActor* SpawnTile = Cast<AActor>(UGameplayStatics::BeginDeferredActorSpawnFromClass(this, TileToSpawn, SpawnTS));
+				if (SpawnTile)
+				{
+					UStaticMeshComponent* MComponent = Cast<UStaticMeshComponent>(SpawnTile);
+					UGameplayStatics::FinishSpawningActor(SpawnTile, SpawnTS);
+					if (!BuildedTilesArr.Contains(SpawnTile))
+					{
+						if (MComponent)
+						{
+							UMaterialInterface* Mat = MComponent->GetMaterial(0);
+							Mat->GetVectorParameterValue("Color", PColor);
+							PColor.R = (PColor.R) + 0.2;
+							Mat->OverrideVectorParameterDefault("Color", PColor, true, ERHIFeatureLevel::ES2);
+						}
+						BuildedTilesArr.Add(SpawnTile);
+					}
+					else
+					{
+						UStaticMeshComponent* MComponent = Cast<UStaticMeshComponent>(BuildedTilesArr[i]);
+						if (MComponent)
+						{
+							UMaterialInterface* Mat = MComponent->GetMaterial(0);
+							Mat->GetVectorParameterValue("Color", PColor);
+							PColor.R = (PColor.R) + 0.2;
+							Mat->OverrideVectorParameterDefault("Color", PColor, true, ERHIFeatureLevel::ES2);
+						}
+					}
+				}
+
+
+			}
+		}
+	}
 }
 
 void AHeatmapManager::PostEditChangeProperty(FPropertyChangedEvent & PropertyChangedEvent)
@@ -226,4 +298,5 @@ void AHeatmapManager::PostEditChangeProperty(FPropertyChangedEvent & PropertyCha
 	{
 		CollectDataFromFiles();
 	}
+	BuildHeatMapTiles(bRefresh);
 }
