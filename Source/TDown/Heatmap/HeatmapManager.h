@@ -5,8 +5,9 @@
 #include "GameFramework/Actor.h"
 #include "HeatmapManager.generated.h"
 
-class AHeatmapDataCollector;
 class ATDownCharacter;
+class AHeatmapDataCollector;
+class AHeatmapTileActor;
 
 UCLASS()
 class TDOWN_API AHeatmapManager : public AActor
@@ -23,13 +24,15 @@ public:
 		UTextRenderComponent* TextComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatmapManager_")
-	TSubclassOf<AActor> TileToSpawn;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatmapManager_")
-		bool bRefresh;
+	TSubclassOf<AHeatmapTileActor> TileToSpawn;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatmapManager_")
 		TSubclassOf<class AHeatmapDataCollector> HeatmapToSpawn;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatmapManager_")
 		TSubclassOf<class ACharacter> CharacterClassToFind;	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "_HeatmapManager_")
+	UMaterialInterface* MatToOverride;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatmapManager_")
+		bool bRefreshDta;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatmapManager_")
 		bool bBuildSplinesFromHM;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "_HeatmapManager_")
@@ -64,9 +67,12 @@ public:
 
 	TArray<ATDownCharacter*> FoundedCharactersArr;
 	TArray<AHeatmapDataCollector*> FoundedHeatmapArr;
+
+	int32 HMax = 1;
+	int32 NMin = 0;
 	//private:
 	TArray<AActor*> BuildedTilesArr;
-	
+	TMap<FVector, int32>ControllMap;
 	/*void BeginDestroy() override;
 	void EndPlay(const EEndPlayReason::Type EndPlayReason)override;*/
 	void PostEditChangeProperty(FPropertyChangedEvent & PropertyChangedEvent)override;

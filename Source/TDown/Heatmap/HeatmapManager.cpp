@@ -5,6 +5,7 @@
 #include "TDownCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "HeatmapDataCollector.h"
+#include "HeatmapTileActor.h"
 
 
 // Sets default values
@@ -39,42 +40,48 @@ void AHeatmapManager::BeginPlay()
 }
 
 void AHeatmapManager::CollectCharacters()
-{	
-	TArray<AActor*> FoundActorsArr;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), CharacterClassToFind, FoundActorsArr);
-
-	for (auto i = 0; i < FoundActorsArr.Num();i++)
+{
+	if (GetWorld())
 	{
-		auto FoundActor = Cast<ATDownCharacter>(FoundActorsArr[i]);
-		if (FoundActor)
+		TArray<AActor*> FoundActorsArr;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), CharacterClassToFind, FoundActorsArr);
+
+		for (auto i = 0; i < FoundActorsArr.Num(); i++)
 		{
-			FoundedCharactersArr.Add(FoundActor);
+			ATDownCharacter* FoundActor = Cast<ATDownCharacter>(FoundActorsArr[i]);
+			if (FoundActor)
+			{
+				FoundedCharactersArr.Add(FoundActor);
+			}
 		}
+		GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Green, "Founded by HeatmapManager is " + FString::FromInt(FoundedCharactersArr.Num()) + " characters");
 	}
-	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Green, "Founded by HeatmapManager is " + FString::FromInt(FoundedCharactersArr.Num())+" characters");
 }
 
 void AHeatmapManager::CollectHeatOnLevel()
 {
 	TArray<AActor*> FoundActorsArr;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), HeatmapToSpawn, FoundActorsArr);
-
-	for (auto i = 0; i < FoundActorsArr.Num(); i++)
+	if (GetWorld())
 	{
-		auto FoundActor = Cast<AHeatmapDataCollector>(FoundActorsArr[i]);
-		if (FoundActor && !FoundedHeatmapArr.Contains(FoundActor))
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), HeatmapToSpawn, FoundActorsArr);
+
+		for (auto i = 0; i < FoundActorsArr.Num(); i++)
 		{
-			FoundedHeatmapArr.Add(FoundActor);
-			FoundActor->SetOwner(this);
+			AHeatmapDataCollector* FoundActor = Cast<AHeatmapDataCollector>(FoundActorsArr[i]);
+			if (FoundActor && !FoundedHeatmapArr.Contains(FoundActor))
+			{
+				FoundedHeatmapArr.Add(FoundActor);
+				FoundActor->SetOwner(this);
+			}
 		}
+		GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Green, "Founded by HeatmapManager is " + FString::FromInt(FoundedHeatmapArr.Num()) + " heatmaps on level");
 	}
-	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Green, "Founded by HeatmapManager is " + FString::FromInt(FoundedHeatmapArr.Num()) + " heatmaps on level");
 }
 
 void AHeatmapManager::SpawnHeatmapsOnLevel()
 {
 
-	if (FoundedHeatmapArr.Num()<FoundedCharactersArr.Num())
+	if (FoundedHeatmapArr.Num() < FoundedCharactersArr.Num())
 	{
 		FTransform SpawnTS;
 		//SpawnTS.SetLocation();
@@ -91,12 +98,12 @@ void AHeatmapManager::SpawnHeatmapsOnLevel()
 void AHeatmapManager::SetUpHeatmaps()
 {
 	int8 i = 0;
-	for ( i = 0; i < FoundedHeatmapArr.Num(); i++)
+	for (i = 0; i < FoundedHeatmapArr.Num(); i++)
 	{
-		if (FoundedHeatmapArr[i] !=NULL )
+		if (FoundedHeatmapArr[i] != NULL)
 		{
-			AHeatmapDataCollector* Setuper = Cast<AHeatmapDataCollector>(FoundedHeatmapArr[i]);			
-			if (Setuper )
+			AHeatmapDataCollector* Setuper = Cast<AHeatmapDataCollector>(FoundedHeatmapArr[i]);
+			if (Setuper)
 			{
 				Setuper->bCollectCharacters = false;
 				Setuper->UpdateTimeBetweenChek = UpdTime;
@@ -114,7 +121,7 @@ void AHeatmapManager::SetUpHeatmaps()
 
 void AHeatmapManager::StartCollectData(bool state)
 {
-	for (int i = 0; i < FoundedHeatmapArr.Num();i++)
+	for (int i = 0; i < FoundedHeatmapArr.Num(); i++)
 	{
 		auto DataCollector = Cast<AHeatmapDataCollector>(FoundedHeatmapArr[i]);
 		DataCollector->CollectData();
@@ -123,26 +130,26 @@ void AHeatmapManager::StartCollectData(bool state)
 
 void AHeatmapManager::BuildSplines(bool state)
 {
-		for (int i = 0; i < FoundedHeatmapArr.Num(); i++)
+	for (int i = 0; i < FoundedHeatmapArr.Num(); i++)
+	{
+		auto SplineBuilder = Cast<AHeatmapDataCollector>(FoundedHeatmapArr[i]);
+		if (FoundedCharactersArr.Num() != 0)
 		{
-			auto SplineBuilder = Cast<AHeatmapDataCollector>(FoundedHeatmapArr[i]);
-			if (FoundedCharactersArr.Num() != 0)
-			{
-				SplineBuilder->SetCharacter(FoundedCharactersArr[i]);
-			}
-			SplineBuilder->SetCharNumberInWorld(i);
-			SplineBuilder->BuildSplinePath(i, state);
-		}	
+			SplineBuilder->SetCharacter(FoundedCharactersArr[i]);
+		}
+		SplineBuilder->SetCharNumberInWorld(i);
+		SplineBuilder->BuildSplinePath(i, state);
+	}
 }
 
 void AHeatmapManager::CollectDataFromFiles()
 {
 	CoordFromSplineArr.Empty();
-	
+
 	for (auto i = 0; i < FoundedHeatmapArr.Num(); i++)
 	{
 		auto CharNumberIn = i;
-		
+
 		auto FileFrom = SaveDirectoryPath + "/" + LogFileName + "_" + FString::FromInt(CharNumberIn) + ".txt";
 		bool DExists = FPlatformFileManager::Get().GetPlatformFile().FileExists(*FileFrom);//DirectoryExists(*FileFrom);
 		if (DExists)
@@ -167,11 +174,11 @@ void AHeatmapManager::CollectDataFromFiles()
 					FParse::Value(MatchFind, TEXT("X="), ResultVector.X);
 					FParse::Value(MatchFind, TEXT("Y="), ResultVector.Y);
 					FParse::Value(MatchFind, TEXT("Z="), ResultVector.Z);
-										
+
 					CoordFromSplineArr.Add(ResultVector);
 
-					/// fix coordinates
-					auto fixX = FMath::Fmod(ResultVector.X,100);
+					/// fix coordinates to make it aliquot to 100
+					auto fixX = FMath::Fmod(ResultVector.X, 100);
 					auto fixY = FMath::Fmod(ResultVector.Y, 100);
 					auto fixZ = FMath::Fmod(ResultVector.Z, 100);
 
@@ -189,35 +196,35 @@ void AHeatmapManager::CollectDataFromFiles()
 
 					if (fixZ > 50)
 					{
-						ResultVectorFix.Z = 0;// (ResultVector.Z - fixZ) + 100;
+						ResultVectorFix.Z = 0; //(ResultVector.Z - fixZ) + 100;
 					}
-					else ResultVectorFix.Z = 0;// ResultVector.Z - fixZ;
+					else ResultVectorFix.Z = 0;//ResultVector.Z - fixZ;
 
 					FixedCoordinatesArr.Add(ResultVectorFix);
 					// start so spawning grid
-					
+
 				}
 				else break;
 			}
 		}
 		else break;
 	}
-	
+
 }
 
 void AHeatmapManager::BuildHeatMapTiles(bool isBuild)
 {
 
 	//destroy all actors builder before
-	if (!isBuild && BuildedTilesArr.Num() > 0)
+	if (!isBuild && BuildedTilesArr.Num() > 0 && GetWorld())
 	{
 		TArray<AActor*> FoundActorsArr;
 		UGameplayStatics::GetAllActorsOfClass(GetWorld(), TileToSpawn, FoundActorsArr);
-		if (FoundActorsArr.Num()>0)
+		if (FoundActorsArr.Num() > 0)
 		{
 			for (auto i = 0; i < FoundActorsArr.Num(); i++)
 			{
-				auto FoundActor = Cast<AActor>(FoundActorsArr[i]);
+				auto FoundActor = Cast<AHeatmapTileActor>(FoundActorsArr[i]);
 				if (FoundActor)
 				{
 					FoundActor->Destroy();;
@@ -226,60 +233,81 @@ void AHeatmapManager::BuildHeatMapTiles(bool isBuild)
 		}
 		for (auto i = 0; i < BuildedTilesArr.Num(); i++)
 		{
-			AActor* D = Cast<AActor>(BuildedTilesArr[i]);
+			AHeatmapTileActor* D = Cast<AHeatmapTileActor>(BuildedTilesArr[i]);
 			if (D != NULL)
 				D->Destroy();
 		}
 		BuildedTilesArr.Empty();
 	}
-	else
-	{
-
-		for (auto i = 0; i < FixedCoordinatesArr.Num(); i++)
+	else 
+		if (isBuild)
 		{
-			if (TileToSpawn)
+
+			//TMap<FVector, int>ControllMap;//for debug
+			for (auto i = 0; i < FixedCoordinatesArr.Num(); i++)
+			{
+				if (TileToSpawn)
+				{
+					FVector SpawnLoc;
+					SpawnLoc.X = FixedCoordinatesArr[i].X;
+					SpawnLoc.Y = FixedCoordinatesArr[i].Y;
+					SpawnLoc.Z = GetActorLocation().Z;//FixedCoordinatesArr[i].Z
+
+
+					if (ControllMap.Contains(SpawnLoc))
+					{
+						ControllMap.Emplace(SpawnLoc, ControllMap.FindRef(SpawnLoc) + 1);
+						//const FVector* Ptr = ControllMap.FindKey(SpawnLoc);
+						auto mapVal = ControllMap.FindRef(SpawnLoc);
+						if (mapVal > HMax)
+						{
+							HMax = mapVal;
+						}
+					}
+					else	ControllMap.Add(SpawnLoc, 1);
+				}
+			}
+			for (auto It = ControllMap.CreateIterator(); It; ++It)
 			{
 				FTransform SpawnTS;
-				FVector SpawnLoc;
-				SpawnLoc.X = FixedCoordinatesArr[i].X;
-				SpawnLoc.Y = FixedCoordinatesArr[i].Y;
-				SpawnLoc.Z = GetActorLocation().Z;
-				SpawnTS.SetLocation(SpawnLoc);
-				FLinearColor PColor;
-				
+
+				FVector LocToSpawnTile = It.Key();
+
+				SpawnTS.SetLocation(LocToSpawnTile);
+
 				AActor* SpawnTile = Cast<AActor>(UGameplayStatics::BeginDeferredActorSpawnFromClass(this, TileToSpawn, SpawnTS));
 				if (SpawnTile)
 				{
-					UStaticMeshComponent* MComponent = Cast<UStaticMeshComponent>(SpawnTile);
+
 					UGameplayStatics::FinishSpawningActor(SpawnTile, SpawnTS);
+
+					AHeatmapTileActor* MComponent = Cast<AHeatmapTileActor>(SpawnTile);
+
 					if (!BuildedTilesArr.Contains(SpawnTile))
 					{
 						if (MComponent)
 						{
-							UMaterialInterface* Mat = MComponent->GetMaterial(0);
-							Mat->GetVectorParameterValue("Color", PColor);
-							PColor.R = (PColor.R) + 0.2;
-							Mat->OverrideVectorParameterDefault("Color", PColor, true, ERHIFeatureLevel::ES2);
-						}
-						BuildedTilesArr.Add(SpawnTile);
-					}
-					else
-					{
-						UStaticMeshComponent* MComponent = Cast<UStaticMeshComponent>(BuildedTilesArr[i]);
-						if (MComponent)
-						{
-							UMaterialInterface* Mat = MComponent->GetMaterial(0);
-							Mat->GetVectorParameterValue("Color", PColor);
-							PColor.R = (PColor.R) + 0.2;
-							Mat->OverrideVectorParameterDefault("Color", PColor, true, ERHIFeatureLevel::ES2);
+							//UMaterialInterface* mOverrider = MComponent->GetMeshTile()->GetMaterial(0);
+							UMaterialInstanceDynamic* MID = Cast<UMaterialInstanceDynamic>(MatToOverride);
+							if (MatToOverride && !MID)
+							{
+								// Create and set the dynamic material instance.
+								FLinearColor mPColor;
+								MID = UMaterialInstanceDynamic::Create(MatToOverride, this);
+								auto ColorR = It.Value();
+								//ColorR = ColorR*0.1;
+								//mPColor.R = FMath::Clamp(mPColor.R,0.0f,1.0f);
+								mPColor.R = ColorR*0.1;
+								MID->SetVectorParameterValue("Color", mPColor);
+								MComponent->GetMeshTile()->SetMaterial(0, MID);
+								MComponent->GetMeshTile()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+							}
 						}
 					}
 				}
-
-
+				BuildedTilesArr.Add(SpawnTile);
 			}
 		}
-	}
 }
 
 void AHeatmapManager::PostEditChangeProperty(FPropertyChangedEvent & PropertyChangedEvent)
@@ -294,9 +322,9 @@ void AHeatmapManager::PostEditChangeProperty(FPropertyChangedEvent & PropertyCha
 	FText CharctesP = FText::FromString(FString::FromInt(FoundedHeatmapArr.Num()));// = FString::FromInt(CharNumberInWorld);
 	TextComponent->SetText(CharctesP);
 
-	if (bRefresh)
+	if (bRefreshDta)
 	{
 		CollectDataFromFiles();
 	}
-	BuildHeatMapTiles(bRefresh);
+	BuildHeatMapTiles(bRefreshDta);
 }

@@ -7,6 +7,7 @@
 #include "EngineUtils.h"
 #include "Components/SplineComponent.h"
 #include "ArchiveBase.h"
+#include "AssertionMacros.h"
 
 
 // Sets default values
@@ -78,7 +79,7 @@ void AHeatmapDataCollector::CollectCharacters()
 			}
 		}
 	}
-	if (CharNumberInWorld<CharactersArr.Num())
+	if (CharNumberInWorld < CharactersArr.Num())
 	{
 		auto selectChar = Cast<ATDownCharacter>(CharactersArr[CharNumberInWorld]);
 		if (selectChar)
@@ -121,7 +122,7 @@ void AHeatmapDataCollector::CollectData()
 				return true;
 			}*/
 			if (SplineDataSwitcher == ESplineDataSwitcher::ES_StringData)
-			{				
+			{
 				auto FileToSaveArr = SaveDirectoryPath + "/" + LogFileName + "_" + FString::FromInt(CharNumberInWorld) + ".txt";
 
 				const FString& loc = CALoc.ToString();
@@ -141,6 +142,35 @@ void AHeatmapDataCollector::CollectData()
 	if (CharCurrentPtr)
 	{
 		GetWorldTimerManager().SetTimer(ChekTimeHandler, this, &AHeatmapDataCollector::CollectData, UpdateTimeBetweenChek, true);
+	}
+}
+
+void AHeatmapDataCollector::ParseCoordsFromFile(FString& Result, const TCHAR* Filename)
+{
+	FFileHelper::LoadFileToString(Result, Filename);
+
+	FVector ResultVector;
+	ResultVector.X = 0;
+	ResultVector.Y = 0;
+	ResultVector.Z = 0;
+
+	FString Ptr;
+	SplineCoordArr.Empty();
+
+	for (auto itr = 0; itr < Result.Len(); itr++)
+	{
+		Ptr = TEXT("line" + FString::FromInt(itr));
+		const TCHAR* MatchFind = FCString::Strfind(*Result, *Ptr);
+		if (MatchFind != NULL)
+		{
+			FParse::Value(MatchFind, TEXT("X="), ResultVector.X);
+			FParse::Value(MatchFind, TEXT("Y="), ResultVector.Y);
+			FParse::Value(MatchFind, TEXT("Z="), ResultVector.Z);
+
+			PathSpline->AddSplineWorldPoint(ResultVector);
+			SplineCoordArr.Add(ResultVector);
+		}
+		else break;
 	}
 }
 
@@ -181,34 +211,9 @@ bool AHeatmapDataCollector::BuildSplinePath(uint8 CharNumberIn /*= 0*/, bool isA
 				if (SplineDataSwitcher == ESplineDataSwitcher::ES_StringData)
 				{
 					FString StringFromFile;
+					ParseCoordsFromFile(StringFromFile, *FileFrom);
 
-					FFileHelper::LoadFileToString(StringFromFile, *FileFrom);
-
-					FVector ResultVector;
-					ResultVector.X = 0;
-					ResultVector.Y = 0;
-					ResultVector.Z = 0;
-
-					FString Ptr;
-					SplineCoordArr.Empty();
-
-					for (auto itr = 0; itr < StringFromFile.Len(); itr++)
-					{
-						Ptr = TEXT("line" + FString::FromInt(itr));
-						const TCHAR* MatchFind = FCString::Strfind(*StringFromFile, *Ptr);
-						if (MatchFind != NULL)
-						{
-							FParse::Value(MatchFind, TEXT("X="), ResultVector.X);
-							FParse::Value(MatchFind, TEXT("Y="), ResultVector.Y);
-							FParse::Value(MatchFind, TEXT("Z="), ResultVector.Z);
-
-							PathSpline->AddSplineWorldPoint(ResultVector);
-							SplineCoordArr.Add(ResultVector);
-						}
-						else break;
-					}
-
-					if (ParticlesArr.Num() > 0)//ParticlesArr.Num() > 0
+					if (ParticlesArr.Num() > 0)
 					{
 						for (auto i = 0; i < ParticlesArr.Num(); i++)
 						{
@@ -329,10 +334,9 @@ void AHeatmapDataCollector::PostEditChangeProperty(FPropertyChangedEvent & Prope
 		}
 		ParticlesArr.Empty();
 	}
-	FText CharctesP= FText::FromString(FString::FromInt(CharNumberInWorld));// = FString::FromInt(CharNumberInWorld);
+	FText CharctesP = FText::FromString(FString::FromInt(CharNumberInWorld));// = FString::FromInt(CharNumberInWorld);
 	TextComponent->SetText(CharctesP);
 	BuildSplinePath(CharNumberInWorld);
-
 }
 
 void AHeatmapDataCollector::BeginDestroy() //////////////////////
@@ -350,7 +354,6 @@ void AHeatmapDataCollector::BeginDestroy() //////////////////////
 		}
 		ParticlesArr.Empty();
 	}
-	
 }
 
 void AHeatmapDataCollector::SetCharacter(ATDownCharacter * newCharacter)

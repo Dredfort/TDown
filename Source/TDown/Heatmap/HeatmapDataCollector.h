@@ -70,6 +70,7 @@ public:
 
 	bool SaveArrayToFile(const TArray<int16>& Array, const TCHAR* Filename, IFileManager * FileManager = &IFileManager::Get(), uint32 WriteFlags = 0) const;
 	bool LoadFileToArray(TArray<int16>& Result, const TCHAR* Filename, uint32 Flags);
+	void ParseCoordsFromFile(FString& Result, const TCHAR* Filename);
 	TArray<int16> ArrayFromFile;
 	
 	//void OnConstruction(const FTransform& Transform) override;
